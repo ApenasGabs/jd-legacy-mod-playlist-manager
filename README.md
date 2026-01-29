@@ -61,7 +61,7 @@ The tool scans the MOD's directory, extracts necessary data, and allows the user
 
 ## Quick Download & Installation For Users
 1. **[Download Latest Release (.zip)](https://github.com/vguasta/jd-legacy-mod-playlist-manager/releases)**
-2. Extract the `.zip` file to your desired location.
+2. Extract the `JD2022LMPlaylistManager.zip` file to your desired location.
 3. Run the `JD2022LMPlaylistManager.exe`.
 
 **Note:** *The `.zip` includes the executable and the optional `./runtime/songs.json` file. Some antivirus software may flag the executable as a false positive due to it being unsigned. It is recommended to add an exception for the installation path.*
