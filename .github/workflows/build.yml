@@ -40,7 +40,6 @@ jobs:
           # Copy all built files and folders to the release folder
           cp -r build_output/* $releaseDir/
           # Ensure runtime/songs.json exists in the correct place (redundant, but safe)
-          mkdir -p $releaseDir/runtime
           cp runtime/songs.json $releaseDir/runtime/
           # Zip the entire folder (structure: JD2022LMPlaylistManager/ with all files inside)
           Compress-Archive -Path $releaseDir -DestinationPath ../JD2022LMPlaylistManager.zip
