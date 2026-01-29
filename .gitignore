@@ -1,0 +1,46 @@
+# Byte-compiled / cache
+**/__pycache__/
+**/*.py[cod]
+**/*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Logs
+**/logs/
+**/*.log
+
+# Runtime/generated data
+!app/runtime/.gitkeep
+app/runtime/
+!app/runtime/songs.json
+app/output/
+app/patch_nx_backups/
+app/**/temp/
+app/runtime/temp/**
+!app/runtime/temp/**/.gitkeep
+
+# Never commit extracted runtime data or IPK outputs
+app/runtime/extracted/
+app/output/**/*.ipk
+app/patch_nx_backups/**/*.ipk
+app/dist/
+app/build/
+
+# Keep placeholder files in volatile folders
+!**/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+
+# Build/dist
+build/
+dist/
+*.spec

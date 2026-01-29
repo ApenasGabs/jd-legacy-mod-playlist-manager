@@ -1,0 +1,14 @@
+{
+    "version": 5,
+    "gameid": 490359856,
+    "engineversion": 253653,
+    "switchTitle": false,
+    "compress": [
+        ".dtape.ckd",
+        ".fx.fxb",
+        ".m3d.ckd",
+        ".png.ckd",
+        ".tga.ckd"
+    ],
+    "method": "zlib"
+}
