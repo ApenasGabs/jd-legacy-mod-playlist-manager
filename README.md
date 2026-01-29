@@ -1,41 +1,49 @@
-<center>
 
-<h1>
+<h1 align="center">
   <img src="app/resources/gui/icon.jpg" alt="Icon" width="32" style="vertical-align: middle;">
   Just Dance 2022 Legacy MOD (Switch) Playlist Manager
 </h1>
 
-<img src="app/resources/assets/default_cover.png" alt="Default Playlist Cover" width="400">
+<p align="center">
+  <img src="app/resources/assets/default_cover.png" alt="Default Playlist Cover" width="400">
+</p>
 
-![License](https://img.shields.io/badge/License-GPL%20v3.0-blue.svg)
-![Python Version](https://img.shields.io/badge/Python-3.10-blue.svg)
-
-### A GUI tool to manage, create, and organize playlists for the *Legacy MOD* on Just Dance 2022 (Switch) by scanning and editing MOD files and locales.
-
-</center>
+<p align="center">
+  <img src="https://img.shields.io/badge/License-GPL%20v3.0-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/Python-3.10-blue.svg" alt="Python Version">
+</p>
+<h3 align="center"> A GUI tool to manage, create, and organize playlists for the *Legacy MOD* on Just Dance 2022 (Switch) by scanning and editing MOD files and locales.</h2>
 
 This software is a dedicated manager for users of the **Just Dance 2022 Legacy MOD** on Nintendo Switch. It provides a visual interface to handle the complexity of playlist files, allowing for deep customization of how songs are organized in-game.
 The tool scans the MOD's directory, extracts necessary data, and allows the user to manipulate sections and playlists without manual JSON editing.
 
-<center>
-
-<img src="docs/images/ui.jpg" alt="UI" width="1000">
-
-</center>
+<p align="center">
+  <img src="docs/images/UI.jpg" alt="UI" width="1000">
+</p>
 
 ---
 
-## Table of Contents
-- [Key Features](#key-features)
-- [Quick Download & Installation For Users](#quick-download--installation-for-users)
-- [How to Use](#how-to-use)
-- [Detailed Features](#detailed-features)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [Installation For Developers](#installation-for-developers)
-- [Disclaimer](#disclaimer)
-- [Credits](#credits)
-- [License](#license)
+<div align="center">
+  <table style="border: none;">
+    <tr style="border: none;">
+      <td style="border: none; text-align: left; padding: 0;">
+
+<h2 align="center">Table of Contents</h2>
+
+<p align="left" style="line-height: 1.2;">
+• <a href="#key-features">Key Features</a><br>
+• <a href="#quick-download--installation-for-users">Quick Download & Installation For Users</a><br>
+• <a href="#how-to-use">How to Use</a><br>
+• <a href="#detailed-features">Detailed Features</a><br>
+• <a href="#faq">FAQ</a><br>
+• <a href="#contributing">Contributing</a><br>
+• <a href="#installation-for-developers">Installation For Developers</a><br>
+• <a href="#disclaimer">Disclaimer</a><br>
+• <a href="#credits">Credits</a><br>
+• <a href="#license">License</a>
+</p>
+  </table>
+</div>
 
 
 ## Key Features
@@ -69,10 +77,20 @@ You can load the MOD files and song database in three different ways. Regardless
 
 **Extracting patch_nx.ipk from your mod is required for all modes.**
 
-<div style="display: flex; justify-content: center; align-items: center; gap: 20px">
-   <img src="docs/images/select_mod_folder.jpg" alt="Load Mode Selection" width="300">
-   <img src="docs/images/load.jpg" alt="Load Mode Selection" width="500">
-   <img src="docs/images/loading.jpg" alt="Loading Message Box" width="200">
+<div align="center">
+  <table style="border-collapse: collapse; border: none; border-spacing: 0; background-color: transparent;">
+    <tr style="border: none; background-color: transparent;">
+      <td style="border: none; vertical-align: middle; padding: 10px;">
+        <img src="docs/images/select_mod_folder.jpg" alt="Load Mode Selection" width="300">
+      </td>
+      <td style="border: none; vertical-align: middle; padding: 10px;">
+        <img src="docs/images/load.jpg" alt="Load Mode Selection" width="500">
+      </td>
+      <td style="border: none; vertical-align: middle; padding: 10px;">
+        <img src="docs/images/loading.jpg" alt="Loading Message Box" width="200">
+      </td>
+    </tr>
+  </table>
 </div>
 
 ---
@@ -84,9 +102,9 @@ This is the most basic and fastest way to create your playlists. It was designed
 
 With this mode, you can create, edit, delete, and reorder sections, playlists, and songs. You can also view, edit, and add covers to your playlists. However, you cannot preview coach videos or listen to the audio of each song in the table. Additionally, if a new song is added to the MOD by the modders, the songs.json file will only be updated if a full extraction is performed.
 
-<center>
+<p align="center">
    <img src="docs/images/songs_database_info.jpg" alt="Load Mode Selection" width="300">
-</center>
+</p>
 
 ---
 - **Mode 2:** Use [extracted folder](app/runtime/extracted)
@@ -113,10 +131,10 @@ If new songs are added to the MOD, you will need to extract all the content agai
 ### Creating and Editing Sections
 You can create new sections or edit existing ones using the interface. Double-click or use the appropriate button to add, edit, or remove sections.
 
-<div style="display: flex; justify-content: center; align-items: center; gap: 20px">
+<p align="center">
    <img src="docs/images/new_section.jpg" alt="Load Mode Selection" width="400">
    <img src="docs/images/edit_section.jpg" alt="Load Mode Selection" width="400">
-</div>
+</p>
 
 ---
 
@@ -125,19 +143,19 @@ Double-click or use the appropriate button to add, edit, or delete playlists.
 
 You can add or edit the covers of your playlists that will appear in the game; however, **only .png images with exact dimensions of 1024x512 are allowed**. If you don’t want to use a custom image, you can use the default cover as shown in the interface.
 
-<div style="display: flex; justify-content: center; align-items: center; gap: 20px">
+<p align="center">
    <img src="docs/images/new_playlist.jpg" alt="New Playlist Window" width="400">
    <img src="docs/images/edit_playlist.jpg" alt="Edit Playlist Window" width="400">
-</div>
+</p>
 
 ---
 
 ### Deleting Sections, Playlists and Songs
 Sections, playlists, and songs can be deleted by selecting the rows and clicking the delete button or pressing the DEL key. Be careful, as this action cannot be undone. If you delete a section or a playlist, all content inside will be deleted as well.
 
-<center>
+<p align="center">
    <img src="docs/images/delete_section_playlist.jpg" alt="Delete Section/Playlist Message Box" width="300">
-</center>
+</p>
 
 ---
 
@@ -148,9 +166,9 @@ Use Ctrl or Shift to select multiple songs.
 
 **Only for load mode 2 or 3:** You can preview a song’s video (coach) by clicking on the row in the Songs table. You can listen to the audio by clicking the Play emoji (▶️) in the table.
 
-<center>
+<p align="center">
    <img src="docs/images/drag_and_drop_songs_playlist.jpg" alt="Adding Songs to Playlists" width="1000">
-</center>
+</p>
 
 ---
 
@@ -158,10 +176,10 @@ Use Ctrl or Shift to select multiple songs.
 
 You can change the order of sections, playlists and songs by dragging them to the desired position. You can move an entire playlist from one section to another; the songs in that playlist will remain inside it. You can also move a song from one playlist to another.
 
-<center>
+<p align="center">
    <img src="docs/images/before_moving.jpg" alt="Before Reorder Songs in a Playlist" width="450">
    <img src="docs/images/after_moving.jpg" alt="After Reorder Songs in a Playlist" width="450">
-</center>
+</p>
 
 ---
 
@@ -173,11 +191,15 @@ Some songs may have their CodeName not found in the songs table and will therefo
 
 **If this song does not appear in your game and your files are updated:** Then this is a CodeName that actually does not exist in the MOD files. The CodeName is case-sensitive, so by searching for a similar name in the Songs table, you might find the missing song (this is what the interface suggests). In any case, songs with invalid CodeNames do not cause the game to crash; the only thing that happens is that they will not appear. You can remove them or just leave them there.
 
-<center>
+<p align="center">
    <img src="docs/images/song_not_found_1.jpg" alt="Song Not Found" width="500">
+</p>
+<p align="center">
    <img src="docs/images/song_not_found_2.jpg" alt="Song Not Found" width="900">
+</p>
+<p align="center">
    <img src="docs/images/song_not_found_3.jpg" alt="Song Not Found" width="700">
-</center>
+</p>
 
 ---
 
@@ -186,9 +208,9 @@ Section and playlist locales strings are created, removed, and updated automatic
 
 But, you can double-click any cell in the Locales table to manually edit a locale (not recommended unless you know what you're doing). IDs cannot be edited.
 
-<center>
+<p align="center">
    <img src="docs/images/edit_locale.jpg" alt="Edit Locale String" width="300">
-</center>
+</p>
 
 <span style="color: red; font-weight: bold;">⚠️Attention: The Playlist Manager reads the English localisation file but replaces the localisation files for all languages!<span>
 
@@ -203,26 +225,30 @@ If you want it to read the localisation file of another language, go to `/runtim
 - When the "Autoplay Video" checkbox is checked, the coach’s video will start automatically as you navigate through the rows of the songs table. If unchecked, the video will always remain paused. There are also other player settings available (like timeline and volume).
 - Both the song and locale tables can be sorted (asc and desc) by clicking on the column headers.
 
-<center>
+<p align="center">
    <img src="docs/images/order_song_table.jpg" alt="Order Song Table" width="500">
-</center>
+</p>
 
 - You can drag a song from a playlist to the song filter to quickly find its CodeName, or drag a section/playlist to the locale filter to find its locale.
 
-<center>
+<p align="center">
    <img src="docs/images/drag_and_drop_song_codename.jpg" alt="Drag and drop song to song filter" width="1000">
+</p>
+<p align="center">
    <img src="docs/images/drag_and_drop_section_locale.jpg" alt="Drag and drop section to locale filter" width="1000">
-   <img src="docs/images/drag_and_drop_playlist_locale.jpg" alt="Drag and drop playlist to locale filter" width="1000">
-</center>
+</p>
+<p align="center">
+    <img src="docs/images/drag_and_drop_playlist_locale.jpg" alt="Drag and drop playlist to locale filter" width="1000">
+</p>
 
 ---
 
 ### Developer Info Box (CTRL+I)
 When you select a row in the section/playlist tree or the song table and press CTRL+I, a text box will appear showing all information for that row. This is useful for developers to debug or inspect data.
 
-<center>
+<p align="center">
    <img src="docs/images/developer_info_box.jpg" alt="Developer Info Box" width="700">
-</center>
+</p>
 
 ---
 
@@ -281,4 +307,4 @@ As a developer in the LGBTQIAPN+ 🏳️‍🌈 community of Just Dance fans, I'
 This project is an unofficial fan-made tool. It is **not** affiliated with, endorsed by, or associated with Ubisoft, Nintendo, or the creators of the Legacy MOD. The author does not distribute any copyrighted game assets or MOD files. Use it at your own risk; the author is not responsible for any damage to your game files or console.
 
 ## License
-This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for the full text.
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for the full text.
