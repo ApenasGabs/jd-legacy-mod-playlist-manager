@@ -64,7 +64,11 @@ The tool scans the MOD's directory, extracts necessary data, and allows the user
 2. Extract the `JD2022LMPlaylistManager.zip` file to your desired location.
 3. Run the `JD2022LMPlaylistManager.exe`.
 
-**Note:** *The `.zip` includes the executable and the optional `./runtime/songs.json` file. Some antivirus software may flag the executable as a false positive due to it being unsigned. It is recommended to add an exception for the installation path.*
+**Note:** *The `JD2022LMPlaylistManager.zip` includes the executable and the optional `./runtime/songs.json` file.*
+
+> [!CAUTION]
+> Some antivirus software may flag the executable as a false positive due to it being unsigned.
+> It is recommended to add an exception for the installation path.
 
 
 ## How to Use
