@@ -32,27 +32,28 @@ jobs:
         run: |
           cd app
           $env:PYTHONPATH="src"
-          python -m nuitka --standalone --onefile --mingw64 --show-progress --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager --assume-yes-for-downloads --quiet --remove-output --no-deployment-flag=self-execution --output-dir=build_output main.py
+          python -m nuitka --standalone --mingw64 --show-progress --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager --assume-yes-for-downloads --quiet --remove-output --no-deployment-flag=self-execution --output-dir=build_output main.py
 
       - name: Prepare Release Files
         shell: pwsh
         run: |
-          mkdir release_dist
-          # Ajustado para o caminho da pasta build_output
-          cp app/build_output/JD2022LMPlaylistManager.exe release_dist/
-          mkdir release_dist/runtime
-          cp app/runtime/songs.json release_dist/runtime/
-          Compress-Archive -Path release_dist/* -DestinationPath JD2022LMPlaylistManager.zip
+          mkdir final_release
+          cp -r app/build_output/main.dist/* final_release/
+          mkdir -p final_release/runtime
+          cp app/runtime/songs.json final_release/runtime/
+          
+          if (Test-Path "final_release/main.exe") { 
+            mv final_release/main.exe final_release/JD2022LMPlaylistManager.exe 
+          }
+          
+          Compress-Archive -Path final_release/* -DestinationPath JD2022LMPlaylistManager.zip
 
       - name: Generate SHA-256 Hash
         shell: pwsh
         run: |
           $hash = (Get-FileHash ./JD2022LMPlaylistManager.zip -Algorithm SHA256).Hash
           echo "ZIP_HASH=$hash" >> $env:GITHUB_ENV
-          echo "-------------------------------------------------------"
-          echo "SHA-256 Hash for JD2022LMPlaylistManager.zip:"
-          echo $hash
-          echo "-------------------------------------------------------"
+          echo "SHA-256: $hash"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -61,10 +62,18 @@ jobs:
           files: JD2022LMPlaylistManager.zip
           name: Release ${{ github.ref_name }}
           body: |
+            ## Distribution Details
+            
+            This release contains the standalone version of the JD2022LMPlaylistManager.
+            
+            ### Installation
+            1. Download and extract the `JD2022LMPlaylistManager.zip` file.
+            2. Run the `JD2022LMPlaylistManager.exe` file.
+            
             ### Security Verification
             **SHA-256 Hash:** `${{ env.ZIP_HASH }}`
             
-            To verify the integrity of the file, run the following command in PowerShell:
+            To verify the file integrity via PowerShell:
             `Get-FileHash ./JD2022LMPlaylistManager.zip -Algorithm SHA256`
           draft: false
           prerelease: false

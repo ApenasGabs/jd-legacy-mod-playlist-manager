@@ -78,55 +78,64 @@ Paths below are relative to app/.
 
 ## Build and Automated Release
 
-### Automated Release via Tags
+### Automated Release via GitHub Actions
 
-The project is configured to build, hash, and publish a release automatically using GitHub Actions whenever a new tag is pushed. This process ensures a clean environment, consistent path mapping, and rovides an official SHA-256 checksum for security.
+This project uses GitHub Actions to automate builds and releases whenever a new version tag (`v*`) is pushed to the repository. The workflow ensures a clean environment, reproducible builds, and provides an official SHA-256 checksum for each release.
 
-1. Commit all your changes and ensure your code is pushed to the main branch.
-2. Create and push a version tag from your terminal:
+**How to trigger a release:**
+1. Make sure all your changes are committed and pushed to the main branch.
+2. Create and push a new version tag:
+	```powershell
+	git tag v1.0.0
+	git push origin v1.0.0
+	```
+3. GitHub Actions will automatically:
+	- Install Python 3.10 and all dependencies (including Nuitka, zstandard, pyside6).
+	- Build the standalone executable using Nuitka with all required packages and assets.
+	- Copy the executable and the `runtime/songs.json` file to a release folder.
+	- Package everything into `JD2022LMPlaylistManager.zip`.
+	- Generate the SHA-256 hash of the ZIP and attach it to the release.
+	- Publish a new GitHub Release with the ZIP and the hash for verification.
+
+**What is included in the release:**
+- `JD2022LMPlaylistManager.exe` (standalone executable)
+- `runtime/` folder containing only `songs.json`
+
+**How to install:**
+1. Download and extract the `JD2022LMPlaylistManager.zip` file from the corresponding Release.
+2. Run `JD2022LMPlaylistManager.exe`.
+
+### Manual Build (Local)
+
+If you want to build locally, navigate to the `app` folder and run:
+
 ```powershell
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-3. The GitHub Action will automatically:
-- Set up the Python 3.10 environment and install dependencies.
-- Compile the binary using Nuitka with optimized flags.
-- Bundle the 'JD2022LMPlaylistManager.exe' and the 'runtime/songs.json' folder into a ZIP archive.
-- Generate a SHA-256 checksum.
-- Create a new GitHub Release containing the ZIP and the verification hash.
-
-### Manual Compilation (Local)
-
-If you need to build the executable locally, navigate to the 'app' folder and execute the following command in PowerShell:
-
-```powershell
-# Set PYTHONPATH to include the src directory
+# Add the src directory to PYTHONPATH
 $env:PYTHONPATH="src"
 
-# Run Nuitka compilation
-python -m nuitka --standalone --onefile --mingw64 --show-progress --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui -include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager -assume-yes-for-downloads --quiet --remove-output --no-deployment-flag=self-execution main.py
+# Build with Nuitka (output in app/build_output/main.dist)
+python -m nuitka --standalone --mingw64 --show-progress --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager --assume-yes-for-downloads --quiet --remove-output --no-deployment-flag=self-execution --output-dir=build_output main.py
+
+# Copy the executable and runtime/songs.json to a folder and zip if desired.
 ```
 
 ---
 
 ## Security & Integrity Verification
 
-To ensure the file you downloaded is authentic and has not been altered, you should compare its hash with the one provided in the official GitHub Release notes.
+To ensure the file you downloaded is authentic and has not been tampered with, compare the SHA-256 hash of the downloaded ZIP with the hash published in the corresponding GitHub Release.
 
 ### How to verify on Windows (PowerShell)
 
-1. Open PowerShell in the folder where the .zip file is located.
-2. Run the following command:
-
-```powershell
-Get-FileHash ./JD2022LMPlaylistManager.zip -Algorithm SHA256
-```
-
-3. Compare the output hash with the hash listed in the specific version's Release section on GitHub.
+1. Open PowerShell in the folder where the downloaded `.zip` file is located.
+2. Run:
+	```powershell
+	Get-FileHash ./JD2022LMPlaylistManager.zip -Algorithm SHA256
+	```
+3. Compare the displayed hash with the hash listed in the corresponding Release section on GitHub.
 
 ---
 
 ## Distribution Note
 
-The distributed ZIP file strictly includes the executable and the 'runtime/' folder containing 'songs.json'. All other necessary directories (such as 'output/', 'patch_nx_backups/', or log folders) are automatically generated by the application upon its first launch.
+The distributed ZIP file includes the executable (`JD2022LMPlaylistManager.exe`), all required DLLs and dependencies produced by Nuitka (standalone build), and the `runtime/` folder with `songs.json`. All other required folders (`output/`, `patch_nx_backups/`, `runtime/logs`, etc.) are automatically created by the application on first launch. You must extract the entire ZIP contents to a folder before running the application.
