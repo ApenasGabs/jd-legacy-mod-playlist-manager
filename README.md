@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/Switch-E60012?style=for-the-badge&logo=nintendo-switch&logoColor=white" alt="Switch">
 </p>
 
-<h3 align="center"> A GUI tool to manage, create, and organize playlists for the *Legacy MOD* on Just Dance 2022 (Switch) by scanning and editing MOD files and locales.</h2>
+<h3 align="center"> A GUI tool to manage, create, and organize playlists for the Legacy MOD Offline on Just Dance 2022 (Switch) by scanning and editing MOD files and locales.</h2>
 
 This software is a dedicated manager for users of the **Just Dance 2022 Legacy MOD** on Nintendo Switch. It provides a visual interface to handle the complexity of playlist files, allowing for deep customization of how songs are organized in-game.
 The tool scans the MOD's directory, extracts necessary data, and allows the user to manipulate sections and playlists without manual JSON editing.
