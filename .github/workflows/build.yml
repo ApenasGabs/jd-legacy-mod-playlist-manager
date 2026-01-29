@@ -28,15 +28,12 @@ jobs:
           pip install pyside6 zstandard
 
 
-      - name: Build with cx_Freeze
+      - name: Build and Prepare Release Files
         shell: pwsh
         run: |
           cd app
+          # Build with cx_Freeze
           python setup.py build
-
-      - name: Prepare Release Files
-        shell: pwsh
-        run: |
           # Create main release folder
           $releaseDir = "JD2022LMPlaylistManager"
           mkdir $releaseDir
@@ -46,7 +43,7 @@ jobs:
           mkdir -p $releaseDir/runtime
           cp runtime/songs.json $releaseDir/runtime/
           # Zip the entire folder (structure: JD2022LMPlaylistManager/ with all files inside)
-          Compress-Archive -Path $releaseDir -DestinationPath JD2022LMPlaylistManager.zip
+          Compress-Archive -Path $releaseDir -DestinationPath ../JD2022LMPlaylistManager.zip
 
       - name: Generate SHA-256 Hash
         shell: pwsh
