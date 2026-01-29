@@ -12,6 +12,11 @@
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
   <img src="https://img.shields.io/badge/Python-3.10-blue.svg" alt="Python Version">
 </p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Ubisoft-%23F5F5F5.svg?style=for-the-badge&logo=Ubisoft&logoColor=black" alt="Switch">
+  <img src="https://img.shields.io/badge/Switch-E60012?style=for-the-badge&logo=nintendo-switch&logoColor=white" alt="Switch">
+</p>
+
 <h3 align="center"> A GUI tool to manage, create, and organize playlists for the *Legacy MOD* on Just Dance 2022 (Switch) by scanning and editing MOD files and locales.</h2>
 
 This software is a dedicated manager for users of the **Just Dance 2022 Legacy MOD** on Nintendo Switch. It provides a visual interface to handle the complexity of playlist files, allowing for deep customization of how songs are organized in-game.
@@ -121,8 +126,8 @@ With this mode, you can do everything included in mode 1, as well as preview the
 
 This is the slowest and most complete mode. It extracts all .ipk files from your mod folder to the [runtime/extracted folder](app/runtime/extracted). The extracted files remain after closing the Playlist Manager, and songs.json is updated as soon as extraction is finished.
 
-<span style="color: red; font-weight: bold;">⚠️ Unfortunately, since the Legacy MOD is already around 150GB, you will need about 180GB of free disk space to perform the extraction, and the whole process can take around 30 minutes. ⚠️</span>
-
+> [!CAUTION]
+> **Unfortunately, since the Legacy MOD is already around 150GB, you will need about 180GB of free disk space to perform the extraction, and the whole process can take around 30 minutes.**
 
 If new songs are added to the MOD, you will need to extract all the content again so these songs appear in the songs table.
 
@@ -212,7 +217,8 @@ But, you can double-click any cell in the Locales table to manually edit a local
    <img src="docs/images/edit_locale.jpg" alt="Edit Locale String" width="300">
 </p>
 
-<span style="color: red; font-weight: bold;">⚠️Attention: The Playlist Manager reads the English localisation file but replaces the localisation files for all languages!<span>
+> [!CAUTION]
+> **The Playlist Manager reads the English localisation file but replaces the localisation files for all languages!**
 
 If you want it to read the localisation file of another language, go to `/runtime/extracted/patch_nx/enginedata/localisation`, make a copy of your language’s file, and rename the copy to `localisation.itf_language_english.loc8`, replacing the existing file.
 
