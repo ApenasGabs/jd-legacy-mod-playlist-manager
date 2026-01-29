@@ -27,10 +27,17 @@ build_exe_options = {
 base = "Win32GUI"
 
 setup(
-    name = "JD2022LMPlaylistManager",
-    version = "1.0",
-    description = "Just Dance 2022 Legacy MOD Playlist Manager",
-    options = {"build_exe": build_exe_options},
-    executables = [Executable("main.py", base=base, target_name="JD2022LMPlaylistManager.exe")],
+    name="JD2022LMPlaylistManager",
+    version="1.0",
+    description="Just Dance 2022 Legacy MOD Playlist Manager",
+    options={"build_exe": build_exe_options},
+    executables=[
+        Executable(
+            "main.py",
+            base=base,
+            target_name="JD2022LMPlaylistManager.exe",
+            icon="resources/gui/icon.ico"
+        )
+    ],
 )
     # Additional comments can be added here if necessary
