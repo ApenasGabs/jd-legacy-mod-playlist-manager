@@ -4,16 +4,18 @@ from PySide6.QtCore import Qt, QEvent, QObject, QTimer
 from PySide6.QtWidgets import QApplication, QAbstractItemView, QTreeWidgetItem
 from PySide6.QtGui import QFont, QTextCursor
 
-from ui.shared.constants import (
+from .constants import (
     TREE_ITEM_TYPE_ROLE,
-    SONG_CODE_ROLE,
+    MISSING_SONG_MESSAGE_ROLE,
     MISSING_SONG_CODE_ROLE,
-    SECTION_TITLE_ID_ROLE,
-    SECTION_TITLE_ROLE,
+    SONG_CODE_ROLE,
     PLAYLIST_ID_ROLE,
+    PLAYLIST_DESCRIPTION_TEXT_ROLE,
+    PLAYLIST_COVER_PNG_PATH_ROLE,
+    PLAYLIST_TITLE_TEXT_ROLE,
     TreeItemType,
 )
-from ui.utils.utils import is_descendant_of
+from ..utils.utils import is_descendant_of
 
 
 class GlobalFocusEventFilter(QObject):

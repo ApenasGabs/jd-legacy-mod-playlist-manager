@@ -4,10 +4,10 @@ import logging
 import re
 from pathlib import Path
 
-import config
-import utils.playlist_covers as playlist_covers
-import utils.ipk_manager as ipk_manager
-from ui.shared import texts
+from .. import config
+from ..utils import playlist_covers as playlist_covers
+from ..utils import ipk_manager as ipk_manager
+from ..ui.shared import texts
 
 
 class DataService:

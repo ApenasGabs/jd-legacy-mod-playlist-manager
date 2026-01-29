@@ -266,7 +266,7 @@ def pack(target_folder, output_ipk, config_data=None):
     """
     if config_data is None:
         try:
-            import config
+            from .. import config
             config_path = config.CONFIG_IPK_PACKER
         except Exception:
             config_path = None

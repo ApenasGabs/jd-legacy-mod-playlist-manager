@@ -4,9 +4,9 @@ import traceback
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-import config
-from ui.windows.main_window import MainWindow
-from ui.shared import texts
+from . import config
+from .ui.windows.main_window import MainWindow
+from .ui.shared import texts
 
 
 def setup_logging():

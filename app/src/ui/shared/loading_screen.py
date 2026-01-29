@@ -2,8 +2,8 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QProgressBar
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont, QMovie
 
-import config
-from ui.shared import texts
+from ... import config
+from . import texts
 
 
 class LoadingScreen(QDialog):

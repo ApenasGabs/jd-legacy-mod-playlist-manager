@@ -8,9 +8,9 @@ from PySide6.QtGui import QFont, QBrush, QColor, QImage, QPixmap, QRegularExpres
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMessageBox, QTreeWidgetItem, QFileDialog
 
-import config
-from utils.utils import adjust_name_17
-from ui.shared.constants import (
+from ... import config
+from ...utils.utils import adjust_name_17
+from ..shared.constants import (
     TREE_ITEM_TYPE_ROLE,
     PLAYLIST_ID_ROLE,
     PLAYLIST_TITLE_TEXT_ROLE,
@@ -18,8 +18,8 @@ from ui.shared.constants import (
     PLAYLIST_COVER_PNG_PATH_ROLE,
     TreeItemType,
 )
-from ui.utils.utils import set_label_pixmap
-from ui.shared import texts
+from ..utils.utils import set_label_pixmap
+from ..shared import texts
 
 
 class PlaylistWindowController:

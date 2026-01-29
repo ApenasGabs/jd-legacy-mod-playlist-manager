@@ -1,3 +1,5 @@
+# Build tool
+cx_Freeze
 PySide6
 Pillow
 numpy

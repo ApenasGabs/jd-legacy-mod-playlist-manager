@@ -5,14 +5,14 @@ import shutil
 from PySide6.QtCore import QThread, Qt, QTimer
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-import config
-from core.enums import LoadMode
-from ui.shared import texts
-from ui.utils.utils import prewarm_cover_cache
-from ui.shared.dialogs import show_error, show_info, show_warning
-from ui.shared.loading_screen import LoadingScreen
-import utils.ipk_manager as ipk_manager
-from workers.data_load_worker import DataLoadWorker
+from ... import config
+from ...core.enums import LoadMode
+from ..shared import texts
+from ..utils.utils import prewarm_cover_cache
+from ..shared.dialogs import show_error, show_info, show_warning
+from ..shared.loading_screen import LoadingScreen
+from ...utils import ipk_manager as ipk_manager
+from ...workers.data_load_worker import DataLoadWorker
 
 
 class LoadController:

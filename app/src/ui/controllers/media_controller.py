@@ -6,8 +6,8 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import QVBoxLayout, QTableWidgetItem
 
-from ui.shared import texts
-from ui.shared.dialogs import show_info, show_error
+from ..shared import texts
+from ..shared.dialogs import show_info, show_error
 
 
 class MediaController:

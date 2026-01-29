@@ -3,11 +3,11 @@ import logging
 
 from PySide6.QtCore import QObject, Signal
 
-import config
-from core.enums import LoadMode
-from ui.shared import texts
-import utils.localisation as localisation
-from services.data_service import DataService
+from .. import config
+from ..core.enums import LoadMode
+from ..ui.shared import texts
+from ..utils import localisation as localisation
+from ..services.data_service import DataService
 
 
 class DataLoadWorker(QObject):

@@ -1,33 +1,12 @@
 import sys
-import shutil
+from ... import config
 import logging
-import json
-import re
-import os
-from collections import OrderedDict
-
-from PySide6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QMessageBox,
-    QAbstractItemView,
-    QHeaderView,
-    QVBoxLayout,
-    QDialog,
-    QPlainTextEdit,
-    QDialogButtonBox,
-    QLineEdit,
-    QTextEdit,
-    QComboBox,
-)
+from PySide6.QtWidgets import QMainWindow, QApplication, QMessageBox, QAbstractItemView, QHeaderView, QVBoxLayout, QDialog, QPlainTextEdit, QDialogButtonBox, QLineEdit, QTextEdit, QComboBox
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence
-from PySide6.QtGui import QFont, QPixmap, QIcon, QShortcut
-
-import config
-
-from ui.shared.constants import (
+from PySide6.QtGui import QKeySequence, QFont, QPixmap, QIcon, QShortcut
+from collections import OrderedDict
+from ..shared.constants import (
     TREE_ITEM_TYPE_ROLE,
     MISSING_SONG_MESSAGE_ROLE,
     MISSING_SONG_CODE_ROLE,
@@ -38,10 +17,10 @@ from ui.shared.constants import (
     PLAYLIST_TITLE_TEXT_ROLE,
     TreeItemType,
 )
-from ui.shared import texts
-from ui.shared.dialogs import show_info, show_warning, show_error
-from ui.shared.delegates import MultiLineDelegate
-from ui.shared.filters import (
+from ..shared import texts
+from ..shared.dialogs import show_info, show_warning, show_error
+from ..shared.delegates import MultiLineDelegate
+from ..shared.filters import (
     GlobalFocusEventFilter,
     FocusLossEventFilter,
     TblSongsPlayColumnFilter,
@@ -49,16 +28,16 @@ from ui.shared.filters import (
     TreeToSearchDropFilter,
     NoNewlineFilter,
 )
-from ui.controllers.playlists_tree_controller import PlaylistsTreeController
-from ui.windows.section_window import SectionWindowController
-from ui.windows.playlist_window import PlaylistWindowController
-from ui.controllers.save_controller import SaveController
-from ui.controllers.media_controller import MediaController
-from ui.controllers.volume_controller import VolumeController
-from ui.controllers.songs_table_controller import SongsTableController
-from ui.controllers.locales_controller import LocalesController
-from ui.controllers.load_controller import LoadController
-from services.data_service import DataService
+from ..controllers.playlists_tree_controller import PlaylistsTreeController
+from .section_window import SectionWindowController
+from .playlist_window import PlaylistWindowController
+from ..controllers.save_controller import SaveController
+from ..controllers.media_controller import MediaController
+from ..controllers.volume_controller import VolumeController
+from ..controllers.songs_table_controller import SongsTableController
+from ..controllers.locales_controller import LocalesController
+from ..controllers.load_controller import LoadController
+from ...services.data_service import DataService
 
 
 class MainWindow(QMainWindow):
@@ -76,6 +55,9 @@ class MainWindow(QMainWindow):
         # Load Interface (just loads, doesn't process data yet)
         loader = QUiLoader()
         ui_path = str(config.GUI_DIR / "mainWindow.ui")
+        import os
+        print("DEBUG: ui_path =", ui_path)
+        print("DEBUG: exists =", os.path.exists(ui_path))
         self.ui = loader.load(ui_path, None)
 
         if not self.ui:

@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QTableWidgetItem
 
-from ui.shared import texts
+from ..shared import texts
 
 
 class SongsTableController:

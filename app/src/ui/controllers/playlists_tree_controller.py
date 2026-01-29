@@ -5,8 +5,8 @@ from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QBrush, QColor, QFont, QPixmap, QTextCursor
 from PySide6.QtWidgets import QCheckBox, QMessageBox, QTreeWidgetItem
 
-import config
-from ui.shared.constants import (
+from ... import config
+from ..shared.constants import (
     TREE_ITEM_TYPE_ROLE,
     MISSING_SONG_MESSAGE_ROLE,
     MISSING_SONG_CODE_ROLE,
@@ -19,8 +19,8 @@ from ui.shared.constants import (
     SECTION_TITLE_ID_ROLE,
     TreeItemType,
 )
-from ui.utils.utils import set_label_pixmap
-from ui.shared import texts
+from ..utils.utils import set_label_pixmap
+from ..shared import texts
 
 
 class PlaylistsTreeController:

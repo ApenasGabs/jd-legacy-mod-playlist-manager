@@ -6,14 +6,14 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMessageBox, QTreeWidgetItem
 from PySide6.QtGui import QFont, QBrush, QColor
 
-import config
-from ui.shared.constants import (
+from ..shared.constants import (
     TREE_ITEM_TYPE_ROLE,
     SECTION_TITLE_ROLE,
     SECTION_TITLE_ID_ROLE,
     TreeItemType,
 )
-from ui.shared import texts
+from ..shared import texts
+from ... import config
 
 
 class SectionWindowController:

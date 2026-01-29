@@ -4,9 +4,9 @@ import logging
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView
 
-import config
-from ui.shared import texts
-from ui.shared.constants import (
+from ... import config
+from ..shared import texts
+from ..shared.constants import (
     TREE_ITEM_TYPE_ROLE,
     PLAYLIST_ID_ROLE,
     PLAYLIST_TITLE_TEXT_ROLE,

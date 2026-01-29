@@ -4,12 +4,12 @@ import logging
 from PySide6.QtCore import QThread, QTimer
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-import config
-from services.save_service import SaveService
-from ui.shared import texts
-from ui.shared.dialogs import show_error
-from ui.shared.loading_screen import LoadingScreen
-from workers.save_worker import SaveWorker
+from ... import config
+from ...services.save_service import SaveService
+from ..shared import texts
+from ..shared.dialogs import show_error
+from ..shared.loading_screen import LoadingScreen
+from ...workers.save_worker import SaveWorker
 
 
 class SaveController:

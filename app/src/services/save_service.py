@@ -2,15 +2,15 @@ import json
 import logging
 from pathlib import Path
 
-from ui.shared import constants, texts
-import config
-import utils.playlist_covers as playlist_covers
-import utils.localisation as localisation
-import utils.ipk_manager as ipk_manager
+from ..ui.shared import constants, texts
+from .. import config
+from ..utils import playlist_covers as playlist_covers
+from ..utils import localisation as localisation
+from ..utils import ipk_manager as ipk_manager
 
 from PySide6.QtCore import Qt
 
-from ui.shared.constants import PLAYLIST_COVER_PNG_PATH_ROLE
+from ..ui.shared.constants import PLAYLIST_COVER_PNG_PATH_ROLE
 
 class SaveService:
     """Encapsulates save pipeline steps."""

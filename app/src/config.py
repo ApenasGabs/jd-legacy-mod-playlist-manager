@@ -2,15 +2,14 @@ import os
 import sys
 from pathlib import Path
 
+
 APP_NAME = "JDLEGACY_PLAYLIST_MANAGER"
 IS_FROZEN = getattr(sys, "frozen", False)
 
-def _get_project_root():
-    if IS_FROZEN:
-        return Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)).resolve()
-    return Path(__file__).resolve().parent.parent
-
-PROJECT_ROOT = _get_project_root()
+if IS_FROZEN:
+    PROJECT_ROOT = Path(sys.executable).parent
+else:
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Resource directories (bundled with the app)
 RESOURCES_DIR = PROJECT_ROOT / "resources"
