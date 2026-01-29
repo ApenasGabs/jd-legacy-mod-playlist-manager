@@ -32,21 +32,29 @@ jobs:
         run: |
           cd app
           $env:PYTHONPATH="src"
-          python -m nuitka --standalone --mingw64 --show-progress --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager --assume-yes-for-downloads --quiet --remove-output --no-deployment-flag=self-execution --output-dir=build_output main.py
+          python -m nuitka --standalone --mingw64 --show-progress --show-memory --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager --assume-yes-for-downloads --remove-output --no-deployment-flag=self-execution --output-dir=build_output main.py
 
       - name: Prepare Release Files
         shell: pwsh
         run: |
-          mkdir final_release
-          cp -r app/build_output/main.dist/* final_release/
-          mkdir -p final_release/runtime
-          cp app/runtime/songs.json final_release/runtime/
-          
-          if (Test-Path "final_release/main.exe") { 
-            mv final_release/main.exe final_release/JD2022LMPlaylistManager.exe 
+          # Create main release folder
+          $releaseDir = "JD2022LMPlaylistManager"
+          $dllDir = "$releaseDir/dlls"
+          mkdir $releaseDir
+          mkdir $dllDir
+          # Copy all Nuitka build output files/folders into a temp folder
+          cp -r app/build_output/main.dist/* $releaseDir/
+          # Move all DLLs and PYD files to dlls subfolder
+          Get-ChildItem -Path $releaseDir -Include *.dll,*.pyd -File | ForEach-Object { Move-Item $_.FullName $dllDir }
+          # Move the main executable to the root and rename if needed
+          if (Test-Path "$releaseDir/main.exe") {
+            Move-Item "$releaseDir/main.exe" "$releaseDir/JD2022LMPlaylistManager.exe"
           }
-          
-          Compress-Archive -Path final_release/* -DestinationPath JD2022LMPlaylistManager.zip
+          # Ensure runtime folder exists and copy songs.json
+          mkdir -p $releaseDir/runtime
+          cp app/runtime/songs.json $releaseDir/runtime/
+          # Zip the entire folder (structure: JD2022LMPlaylistManager/contents...)
+          Compress-Archive -Path $releaseDir -DestinationPath JD2022LMPlaylistManager.zip
 
       - name: Generate SHA-256 Hash
         shell: pwsh

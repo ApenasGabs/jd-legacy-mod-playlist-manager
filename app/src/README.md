@@ -98,12 +98,17 @@ This project uses GitHub Actions to automate builds and releases whenever a new 
 	- Publish a new GitHub Release with the ZIP and the hash for verification.
 
 **What is included in the release:**
-- `JD2022LMPlaylistManager.exe` (standalone executable)
+- `JD2022LMPlaylistManager.exe` (main executable, at the root of the folder)
+- `dlls/` folder containing all DLL and .pyd dependencies required to run
 - `runtime/` folder containing only `songs.json`
 
 **How to install:**
 1. Download and extract the `JD2022LMPlaylistManager.zip` file from the corresponding Release.
-2. Run `JD2022LMPlaylistManager.exe`.
+2. Make sure the folder structure is:
+	- JD2022LMPlaylistManager/JD2022LMPlaylistManager.exe
+	- JD2022LMPlaylistManager/dlls/
+	- JD2022LMPlaylistManager/runtime/songs.json
+3. Run `JD2022LMPlaylistManager.exe` (it will automatically add the dlls/ folder to PATH).
 
 ### Manual Build (Local)
 
@@ -113,8 +118,10 @@ If you want to build locally, navigate to the `app` folder and run:
 # Add the src directory to PYTHONPATH
 $env:PYTHONPATH="src"
 
+
 # Build with Nuitka (output in app/build_output/main.dist)
-python -m nuitka --standalone --mingw64 --show-progress --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager --assume-yes-for-downloads --quiet --remove-output --no-deployment-flag=self-execution --output-dir=build_output main.py
+# Now shows progress and memory usage (no --quiet)
+python -m nuitka --standalone --mingw64 --show-progress --show-memory --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager --assume-yes-for-downloads --remove-output --no-deployment-flag=self-execution --output-dir=build_output main.py
 
 # Copy the executable and runtime/songs.json to a folder and zip if desired.
 ```
@@ -138,4 +145,13 @@ To ensure the file you downloaded is authentic and has not been tampered with, c
 
 ## Distribution Note
 
-The distributed ZIP file includes the executable (`JD2022LMPlaylistManager.exe`), all required DLLs and dependencies produced by Nuitka (standalone build), and the `runtime/` folder with `songs.json`. All other required folders (`output/`, `patch_nx_backups/`, `runtime/logs`, etc.) are automatically created by the application on first launch. You must extract the entire ZIP contents to a folder before running the application.
+The distributed ZIP file contains:
+- `JD2022LMPlaylistManager.exe` (main executable)
+- `dlls/` (all DLLs and .pyd dependencies)
+- `runtime/songs.json`
+
+All other required folders (`output/`, `patch_nx_backups/`, `runtime/logs`, etc.) are automatically created by the application on first launch.
+
+**Important:** The executable will only work if the dlls/ folder is present in the same directory and contains all required files. The application automatically adds dlls/ to the PATH at runtime (see main.py).
+
+Always extract the entire ZIP contents to a folder before running the application.
