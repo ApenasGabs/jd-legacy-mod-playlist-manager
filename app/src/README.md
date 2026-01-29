@@ -82,6 +82,18 @@ Paths below are relative to app/.
 - Example invocation (PowerShell): python -m PyInstaller --noconfirm --clean --name JD2022LMPlaylistManager --windowed --icon="resources/gui/icon.ico" --paths "src" --add-data "src;src" --add-data "resources;resources" --hidden-import PySide6.QtWidgets main.py
 - After build, validate that resources/ are present next to the .exe in dist/.
 
+## Security & Integrity Verification
+
+To ensure that the file you downloaded is authentic and has not been corrupted or intercepted by third-party software (such as antivirus false positives), you can verify its **SHA-256 Checksum**.
+
+### How to verify on Windows (PowerShell)
+1. Open PowerShell in the folder where the file is located.
+2. Run the following command:
+
+```
+Get-FileHash ./JD2022LMPlaylistManager.zip -Algorithm SHA256
+```
+
 ## GitHub Releases (zip)
 - Create a ZIP that includes the built folder from dist/ and the runtime/ folder.
 - In GitHub, go to Releases → Draft a new release → upload the ZIP as an asset → publish.
