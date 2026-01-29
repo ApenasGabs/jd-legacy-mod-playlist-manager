@@ -66,7 +66,7 @@ The tool scans the MOD's directory, extracts necessary data, and allows the user
 
 **Note:** *The `JD2022LMPlaylistManager.zip` includes the executable and the optional `./runtime/songs.json` file.*
 
-> [!CAUTION]
+> [!IMPORTANT]
 > Some antivirus software may flag the executable as a false positive due to it being unsigned.
 > It is recommended to add an exception for the installation path.
 
@@ -130,7 +130,7 @@ With this mode, you can do everything included in mode 1, as well as preview the
 
 This is the slowest and most complete mode. It extracts all .ipk files from your mod folder to the [runtime/extracted folder](app/runtime/extracted). The extracted files remain after closing the Playlist Manager, and songs.json is updated as soon as extraction is finished.
 
-> [!CAUTION]
+> [!IMPORTANT]
 > **Unfortunately, since the Legacy MOD is already around 150GB, you will need about 180GB of free disk space to perform the extraction, and the whole process can take around 30 minutes.**
 
 If new songs are added to the MOD, you will need to extract all the content again so these songs appear in the songs table.

@@ -44,3 +44,6 @@ Thumbs.db
 build/
 dist/
 *.spec
+main.build/
+main.dist/
+*.exe

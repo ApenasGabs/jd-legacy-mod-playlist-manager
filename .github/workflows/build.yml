@@ -1,0 +1,47 @@
+name: Build Executable
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r app/requirements.txt
+          pip install nuitka zstandard pyside6
+
+      - name: Build with Nuitka
+        shell: pwsh
+        run: |
+          cd app
+          $env:PYTHONPATH="src"
+          python -m nuitka --standalone --onefile --mingw64 --show-progress --windows-console-mode=disable --plugin-enable=pyside6 --include-package=core --include-package=services --include-package=ui --include-package=utils --include-package=workers --include-data-dir=resources=resources --include-data-dir=src=src --windows-icon-from-ico=resources/gui/icon.ico --output-filename=JD2022LMPlaylistManager main.py
+
+      - name: Prepare Release Files
+        shell: pwsh
+        run: |
+          mkdir release_dist
+          cp app/JD2022LMPlaylistManager.exe release_dist/
+          mkdir release_dist/runtime
+          cp app/runtime/songs.json release_dist/runtime/
+          Compress-Archive -Path release_dist/* -DestinationPath JD2022LMPlaylistManager.zip
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JD2022LMPlaylistManager-Binary
+          path: JD2022LMPlaylistManager.zip
