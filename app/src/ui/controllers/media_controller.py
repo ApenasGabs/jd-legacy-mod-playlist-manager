@@ -501,7 +501,7 @@ class MediaController:
             self.handle_tblSongs_play_click(row)
             return
 
-        if modifiers == Qt.ShiftModifier and self.main.tblSongs_last_selected_row is not None:
+        if modifiers == Qt.ShiftModifier and self.main.tblSongs_shift_active:
             # Range selection with Shift - select only visible rows in range
             visible_rows = [
                 r for r in range(self.main.ui.tblSongs.rowCount())
@@ -510,19 +510,17 @@ class MediaController:
             if not visible_rows:
                 return
 
-            try:
-                start_index = visible_rows.index(self.main.tblSongs_last_selected_row)
-            except ValueError:
-                start_index = None
+            anchor = self.main.tblSongs_shift_anchor_row
+            if anchor is None:
+                anchor = self.main.tblSongs_last_selected_row if self.main.tblSongs_last_selected_row is not None else row
+                self.main.tblSongs_shift_anchor_row = anchor
 
             try:
+                start_index = visible_rows.index(anchor)
                 end_index = visible_rows.index(row)
             except ValueError:
-                end_index = None
-
-            if start_index is None or end_index is None:
-                # Fallback to normal click if anchor is not visible
                 logging.debug("Shift selection anchor not visible; falling back to single selection")
+                self.main.tblSongs_shift_anchor_row = row
                 self.main.tblSongs_last_selected_row = row
                 self.load_video_for_row(row)
                 return
@@ -537,7 +535,6 @@ class MediaController:
 
             self.main.ui.tblSongs.selectionModel().clearSelection()
             self.main.ui.tblSongs.selectionModel().select(selection, QItemSelectionModel.ClearAndSelect)
-            self.main.tblSongs_last_selected_row = row
             logging.debug(
                 f"Selected visible range: rows {visible_rows[start_index]} to {visible_rows[end_index]}"
             )
@@ -548,6 +545,7 @@ class MediaController:
 
             # Track this as the last selected row for Shift+Click
             self.main.tblSongs_last_selected_row = row
+            self.main.tblSongs_shift_anchor_row = None
 
     def on_tblSongs_current_cell_changed(self, current_row, current_column, previous_row, previous_column):
         """Update media when navigating tblSongs with keyboard."""

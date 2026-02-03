@@ -7,7 +7,7 @@
 # Original author: RN-JK
 #
 ############################################################
-# MODIFICATION SUMMARY - Edited by Guasta, Jan 2026
+# MODIFICATION SUMMARY - Edited by Guasta, Feb 2026
 #
 # This file is a rewritten and improved version of NX_TGACKD.py:
 # - Uses pathlib and subprocess for better path and process handling.
@@ -20,6 +20,7 @@
 # - Centralizes configuration via config.py.
 # - Cleans up temporary files and directories more safely.
 # - Adds optional progress_callback hooks for cover processing steps.
+# - Suppresses Windows console windows for external tools (texconv/xtx_extract).
 #
 ############################################################
 
@@ -34,6 +35,19 @@ from .. import config
 # TGA.CKD Headers
 HEADER_1024x512 = b'\x00\x00\x00\x09\x54\x45\x58\x00\x00\x00\x00\x2C\x00\x10\x00\x80\x08\x00\x04\x00\x00\x01\x18\x00\x00\x10\x00\x80\x00\x00\x00\x00\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 #HEADER_1280x720 = b'\x00\x00\x00\x09\x54\x45\x58\x00\x00\x00\x00\x2C\x00\x00\x20\x05\xD0\x02\x01\x00\x00\x01\x18\x00\x00\x00\x20\x05\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\xCC\xCC'
+
+
+def _get_subprocess_kwargs():
+    kwargs = {}
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        try:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            kwargs["startupinfo"] = startupinfo
+        except Exception:
+            pass
+    return kwargs
 
 def process_playlist_assets(png_path, output_folder, progress_callback=None):
     """
@@ -76,9 +90,12 @@ def process_playlist_assets(png_path, output_folder, progress_callback=None):
             progress_callback(2, 3, f"DDS→TGA.CKD: {input_path.name}")
         except Exception:
             pass
-    subprocess.run([exe_path, "-o", str(temp_xtx), str(dds_path)], 
-                    check=True, 
-                    capture_output=True)
+    subprocess.run(
+        [exe_path, "-o", str(temp_xtx), str(dds_path)],
+        check=True,
+        capture_output=True,
+        **_get_subprocess_kwargs(),
+    )
     
     with open(tga_output, "wb") as f_out:
         f_out.write(current_header)
@@ -127,7 +144,8 @@ def tga_ckd_to_png(input_tga_ckd, output_png, progress_callback=None):
         # The xtx_extract usually converts to .dds or .png depending on the version
         subprocess.run(
             [str(config.XTX_EXTRACT_EXE), "-o", str(output_png), str(temp_xtx)],
-            check=True, creationflags=subprocess.CREATE_NO_WINDOW
+            check=True,
+            **_get_subprocess_kwargs(),
         )
         return True
     finally:
@@ -159,6 +177,7 @@ def image_to_dds(input_img_path, output_dds_path, progress_callback=None):
         [str(texconv), "-f", "DXT5", "-m", "1", "-nologo", "-y", "-o", str(out_dir), str(input_path)],
         check=True,
         capture_output=True,
+        **_get_subprocess_kwargs(),
     )
 
     generated = out_dir / (input_path.stem + ".dds")

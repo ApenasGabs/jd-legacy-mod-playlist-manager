@@ -24,9 +24,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>100</y>
+      <y>120</y>
       <width>561</width>
-      <height>691</height>
+      <height>641</height>
      </rect>
     </property>
     <property name="maximumSize">
@@ -86,7 +86,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
+      <y>70</y>
       <width>191</width>
       <height>31</height>
      </rect>
@@ -127,7 +127,7 @@
     <property name="geometry">
      <rect>
       <x>570</x>
-      <y>60</y>
+      <y>70</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -145,7 +145,7 @@
     <property name="geometry">
      <rect>
       <x>1110</x>
-      <y>60</y>
+      <y>70</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -236,8 +236,8 @@
    <widget class="QPushButton" name="btnAddSection">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>70</y>
+      <x>240</x>
+      <y>760</y>
       <width>81</width>
       <height>26</height>
      </rect>
@@ -249,8 +249,8 @@
    <widget class="QPushButton" name="btnEdit">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>70</y>
+      <x>400</x>
+      <y>760</y>
       <width>81</width>
       <height>26</height>
      </rect>
@@ -262,8 +262,8 @@
    <widget class="QPushButton" name="btnDelete">
     <property name="geometry">
      <rect>
-      <x>470</x>
-      <y>70</y>
+      <x>480</x>
+      <y>760</y>
       <width>81</width>
       <height>26</height>
      </rect>
@@ -325,8 +325,8 @@
    <widget class="QPushButton" name="btnAddPlaylist">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>70</y>
+      <x>320</x>
+      <y>760</y>
       <width>81</width>
       <height>26</height>
      </rect>
@@ -388,7 +388,7 @@
      <rect>
       <x>640</x>
       <y>720</y>
-      <width>111</width>
+      <width>101</width>
       <height>26</height>
      </rect>
     </property>
@@ -483,14 +483,17 @@
    <widget class="QLabel" name="lblSelectedSongsCount">
     <property name="geometry">
      <rect>
-      <x>760</x>
-      <y>720</y>
+      <x>790</x>
+      <y>100</y>
       <width>91</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
      <string>Selected 0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
    <widget class="QSlider" name="sldVolume">
@@ -517,6 +520,103 @@
     </property>
     <property name="text">
      <string>Vol.</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblLoadedPlaylistsCount">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>111</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Loaded 0 playlists</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="txtSearchPlaylists">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>70</y>
+      <width>311</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="inputMethodHints">
+     <set>Qt::InputMethodHint::ImhNone</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnClearSearchPlaylists">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>70</y>
+      <width>51</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblFilterPlaylistsCount">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>100</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0 results</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnSelectAllPlaylists">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>760</y>
+      <width>81</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Select All</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnClearSelectedPlaylists">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>760</y>
+      <width>101</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear Selection</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblSelectedPlaylistsCount">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>100</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Selected 0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
   </widget>

@@ -11,7 +11,7 @@ class VolumeController(QObject):
     def __init__(self, main_window):
         super().__init__(main_window)
         self.main = main_window
-        self._volume = 0.4
+        self._volume = 0.2
 
     def initialize(self):
         slider = getattr(self.main.ui, "sldVolume", None)

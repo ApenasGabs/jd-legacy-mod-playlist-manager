@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QBrush, QColor, QFont, QPixmap, QTextCursor
-from PySide6.QtWidgets import QCheckBox, QMessageBox, QTreeWidgetItem
+from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QTreeWidgetItem
 
 from ... import config
 from ..shared.constants import (
@@ -31,6 +31,7 @@ class PlaylistsTreeController:
         self.main_window = main_window
         self.pending_cover_assets_to_delete = set()
         self._last_cover_path = ""
+        self._last_selected_item = None
 
     def populate_playlists(self, playlists_payload):
         """Populate Playlist Tree (UI-only)."""
@@ -127,6 +128,10 @@ class PlaylistsTreeController:
 
             self.update_section_requests(section_item)
 
+        self.update_loaded_playlists_count()
+        self.filter_tree_playlists()
+        self.update_selected_count()
+
     def _build_section_role_data(self, title, title_id, requests_list):
         data = OrderedDict()
         data["__class"] = "CategoryRule"
@@ -213,6 +218,7 @@ class PlaylistsTreeController:
             # Track last clicked tree item for debug shortcut
             self.main_window.last_click_source = "treePlaylists"
             self.main_window.last_clicked_tree_item = item
+            self._handle_shift_selection(item)
             try:
                 self.main_window.ui.treePlaylists.setFocus()
             except Exception:
@@ -284,6 +290,46 @@ class PlaylistsTreeController:
         except Exception as e:
             logging.exception(f"Error handling playlist click: {e}")
 
+    def _handle_shift_selection(self, item):
+        try:
+            if not item:
+                return
+            modifiers = QApplication.keyboardModifiers()
+            if modifiers != Qt.ShiftModifier or not self.main_window.tree_shift_active:
+                self._last_selected_item = item
+                self.main_window.tree_shift_anchor_item = None
+                return
+
+            visible_items = self._get_visible_items()
+            if not visible_items:
+                self._last_selected_item = item
+                return
+
+            anchor = self.main_window.tree_shift_anchor_item
+            if anchor is None:
+                anchor = self._last_selected_item or item
+                self.main_window.tree_shift_anchor_item = anchor
+
+            try:
+                start_index = visible_items.index(anchor)
+                end_index = visible_items.index(item)
+            except ValueError:
+                self._last_selected_item = item
+                self.main_window.tree_shift_anchor_item = item
+                return
+
+            if start_index > end_index:
+                start_index, end_index = end_index, start_index
+
+            tree = self.main_window.ui.treePlaylists
+            tree.clearSelection()
+            for sel_item in visible_items[start_index:end_index + 1]:
+                sel_item.setSelected(True)
+
+            # Keep anchor until Shift is released
+        except Exception as e:
+            logging.exception(f"Error handling shift selection in playlists tree: {e}")
+
     def on_current_item_changed(self, current, previous):
         """Sync playlist cover when navigating with keyboard."""
         try:
@@ -295,6 +341,223 @@ class PlaylistsTreeController:
             self.on_item_clicked(current, 0)
         except Exception as e:
             logging.exception(f"Error handling playlist current item change: {e}")
+
+    def _get_visible_items(self):
+        items = []
+        tree = self.main_window.ui.treePlaylists
+
+        def is_visible(item):
+            if item.isHidden():
+                return False
+            parent = item.parent()
+            while parent:
+                if parent.isHidden() or not parent.isExpanded():
+                    return False
+                parent = parent.parent()
+            return True
+
+        def walk(parent):
+            for i in range(parent.childCount()):
+                child = parent.child(i)
+                if not child or not is_visible(child):
+                    continue
+                items.append(child)
+                walk(child)
+
+        root = tree.invisibleRootItem()
+        walk(root)
+        return items
+
+    def _get_all_items(self):
+        items = []
+        tree = self.main_window.ui.treePlaylists
+
+        def walk(parent):
+            for i in range(parent.childCount()):
+                child = parent.child(i)
+                if not child:
+                    continue
+                items.append(child)
+                walk(child)
+
+        root = tree.invisibleRootItem()
+        walk(root)
+        return items
+
+    def filter_tree_playlists(self):
+        """Filter treePlaylists based on txtSearchPlaylists input."""
+        try:
+            if not hasattr(self.main_window.ui, "txtSearchPlaylists"):
+                return
+
+            tree = self.main_window.ui.treePlaylists
+            search_text = self.main_window.ui.txtSearchPlaylists.toPlainText().lower().strip()
+            filter_empty = not search_text
+
+            tree.clearSelection()
+            self._last_selected_item = None
+            self.main_window.tree_shift_anchor_item = None
+
+            match_count = 0
+
+            for i in range(tree.topLevelItemCount()):
+                section_item = tree.topLevelItem(i)
+                if not section_item:
+                    continue
+
+                if filter_empty:
+                    section_item.setHidden(False)
+                    section_item.setExpanded(True)
+                    for j in range(section_item.childCount()):
+                        playlist_item = section_item.child(j)
+                        if not playlist_item:
+                            continue
+                        playlist_item.setHidden(False)
+                        playlist_item.setExpanded(False)
+                        for k in range(playlist_item.childCount()):
+                            song_item = playlist_item.child(k)
+                            if song_item:
+                                song_item.setHidden(False)
+                    continue
+
+                section_text = (section_item.text(0) or "").lower()
+                section_matches = search_text in section_text
+                if section_matches:
+                    match_count += 1
+
+                section_has_visible = False
+
+                for j in range(section_item.childCount()):
+                    playlist_item = section_item.child(j)
+                    if not playlist_item:
+                        continue
+
+                    playlist_text = (playlist_item.text(0) or "").lower()
+                    playlist_matches = search_text in playlist_text
+                    if playlist_matches:
+                        match_count += 1
+
+                    matching_songs = 0
+                    for k in range(playlist_item.childCount()):
+                        song_item = playlist_item.child(k)
+                        if not song_item:
+                            continue
+                        song_text = (song_item.text(0) or "").lower()
+                        song_matches = search_text in song_text
+                        song_item.setHidden(not song_matches)
+                        if song_matches:
+                            matching_songs += 1
+
+                    if matching_songs > 0:
+                        match_count += matching_songs
+                        playlist_item.setHidden(False)
+                        playlist_item.setExpanded(True)
+                        section_item.setHidden(False)
+                        section_item.setExpanded(True)
+                        section_has_visible = True
+                    elif playlist_matches:
+                        playlist_item.setHidden(False)
+                        playlist_item.setExpanded(False)
+                        section_item.setHidden(False)
+                        section_item.setExpanded(True)
+                        section_has_visible = True
+                    else:
+                        playlist_item.setHidden(True)
+                        playlist_item.setExpanded(False)
+
+                if not section_has_visible:
+                    if section_matches:
+                        section_item.setHidden(False)
+                        section_item.setExpanded(False)
+                        for j in range(section_item.childCount()):
+                            playlist_item = section_item.child(j)
+                            if not playlist_item:
+                                continue
+                            playlist_item.setHidden(True)
+                            for k in range(playlist_item.childCount()):
+                                song_item = playlist_item.child(k)
+                                if song_item:
+                                    song_item.setHidden(True)
+                    else:
+                        section_item.setHidden(True)
+
+            if filter_empty:
+                match_count = len(self._get_all_items())
+
+            self._update_filter_count(match_count)
+            self.update_selected_count()
+        except Exception as e:
+            logging.exception(f"Error filtering playlists tree: {e}")
+
+    def _update_filter_count(self, count):
+        try:
+            if hasattr(self.main_window.ui, "lblFilterPlaylistsCount"):
+                self.main_window.ui.lblFilterPlaylistsCount.setText(texts.FILTER_PLAYLISTS_COUNT.format(count=count))
+        except Exception as e:
+            logging.exception(f"Error updating playlists filter count: {e}")
+
+    def update_loaded_playlists_count(self):
+        try:
+            if not hasattr(self.main_window.ui, "lblLoadedPlaylistsCount"):
+                return
+            count = 0
+            for section_item in self.get_section_items():
+                for i in range(section_item.childCount()):
+                    playlist_item = section_item.child(i)
+                    if playlist_item and playlist_item.data(0, TREE_ITEM_TYPE_ROLE) == TreeItemType.PLAYLIST.value:
+                        count += 1
+            self.main_window.ui.lblLoadedPlaylistsCount.setText(texts.LOADED_PLAYLISTS_COUNT.format(count=count))
+        except Exception as e:
+            logging.exception(f"Error updating loaded playlists count: {e}")
+
+    def update_selected_count(self):
+        try:
+            if hasattr(self.main_window.ui, "lblSelectedPlaylistsCount"):
+                selected = self.main_window.ui.treePlaylists.selectedItems() or []
+                self.main_window.ui.lblSelectedPlaylistsCount.setText(
+                    texts.SELECTED_PLAYLISTS_COUNT.format(count=len(selected))
+                )
+        except Exception as e:
+            logging.exception(f"Error updating selected playlists count: {e}")
+
+    def on_btnClearSearchPlaylists_clicked(self):
+        try:
+            self.main_window.ui.txtSearchPlaylists.blockSignals(True)
+            self.main_window.ui.txtSearchPlaylists.setPlainText("")
+            self.main_window.ui.txtSearchPlaylists.blockSignals(False)
+            self.main_window.ui.treePlaylists.clearSelection()
+            self._last_selected_item = None
+            self.filter_tree_playlists()
+        except Exception as e:
+            logging.exception(f"Error clearing playlists search: {e}")
+
+    def on_btnSelectAllPlaylists_clicked(self):
+        try:
+            tree = self.main_window.ui.treePlaylists
+            tree.clearSelection()
+            for item in self._get_visible_items():
+                item.setSelected(True)
+            self.update_selected_count()
+        except Exception as e:
+            logging.exception(f"Error selecting all playlists tree items: {e}")
+
+    def on_btnClearSelectedPlaylists_clicked(self):
+        try:
+            self.main_window.ui.treePlaylists.clearSelection()
+            self.update_selected_count()
+        except Exception as e:
+            logging.exception(f"Error clearing playlists selection: {e}")
+
+    def apply_current_filter(self):
+        try:
+            if not hasattr(self.main_window.ui, "txtSearchPlaylists"):
+                return
+            if self.main_window.ui.txtSearchPlaylists.toPlainText().strip():
+                self.filter_tree_playlists()
+            else:
+                self._update_filter_count(len(self._get_all_items()))
+        except Exception as e:
+            logging.exception(f"Error reapplying playlists filter: {e}")
 
     def _get_tree_selected_items(self):
         """Return selected items in treePlaylists, falling back to current item"""
@@ -458,6 +721,9 @@ class PlaylistsTreeController:
             self.main_window.ui.lblImg.setText("")
             self.main_window.ui.treePlaylists.viewport().update()
             self.main_window.update_action_buttons()
+            self.update_loaded_playlists_count()
+            self.filter_tree_playlists()
+            self.update_selected_count()
 
             logging.info(f"Deleted {len(root_items)} item(s) from playlists tree")
         except Exception as e:

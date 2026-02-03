@@ -59,7 +59,7 @@ EDIT_SELECT_SECTION_OR_PLAYLIST = "Please select a section or playlist to edit."
 EDIT_OPEN_ERROR = "Error opening edit section window: {error}"
 
 # Save
-SAVE_LOADING_TITLE = "Saving"
+SAVE_LOADING_TITLE = "Saving files"
 SAVE_LOADING_TEXT = "Saving files...\n\nPlease wait."
 SAVE_TITLE_LABEL = "Saving files"
 SAVE_FOOTER_TEXT = (
@@ -118,6 +118,10 @@ LOAD_MODE_EXTRACTED_NOTE_MISSING = (
 
 # Loading screen
 LOADING_TITLE_LABEL = "Loading files"
+LOADING_TITLE_WITH_MODE = "Loading files ({mode})"
+LOADING_MODE_LABEL_JSON = "songs.json"
+LOADING_MODE_LABEL_EXTRACTED = "extracted folder"
+LOADING_MODE_LABEL_IPK = "extract IPK files"
 LOADING_FOOTER_TEXT = (
     "This may take a while, but it is working.\n\n"
     "Please do not close this application."
@@ -311,6 +315,9 @@ LOADED_SONGS_COUNT = "Loaded {count} songs"
 LOADED_LOCALES_COUNT = "Loaded {count} strings"
 FILTER_RESULTS_COUNT = "{count} results"
 SELECTED_SONGS_COUNT = "Selected {count}"
+LOADED_PLAYLISTS_COUNT = "Loaded {count} playlists"
+SELECTED_PLAYLISTS_COUNT = "Selected {count}"
+FILTER_PLAYLISTS_COUNT = "{count} results"
 
 # Headers
 LOCALES_HEADERS = ["ID", "Text"]

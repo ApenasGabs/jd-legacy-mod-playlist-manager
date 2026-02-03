@@ -203,9 +203,10 @@ class LoadController:
         """Start background worker for extraction/data loading."""
         self._last_load_percent = -1
         self._last_load_message = None
+        mode_label = self._get_load_mode_title_label(load_mode)
         self.loading_screen = LoadingScreen(
             self.main,
-            title_text=texts.LOADING_TITLE_LABEL,
+            title_text=texts.LOADING_TITLE_WITH_MODE.format(mode=mode_label),
             footer_text=texts.LOADING_FOOTER_TEXT,
             cancel_callback=self._on_cancel_loading_requested,
         )
@@ -229,6 +230,15 @@ class LoadController:
         self._data_thread.finished.connect(self._data_thread.deleteLater)
 
         self._data_thread.start()
+
+    def _get_load_mode_title_label(self, load_mode):
+        if load_mode == LoadMode.JSON:
+            return texts.LOADING_MODE_LABEL_JSON
+        if load_mode == LoadMode.EXTRACTED:
+            return texts.LOADING_MODE_LABEL_EXTRACTED
+        if load_mode == LoadMode.IPK:
+            return texts.LOADING_MODE_LABEL_IPK
+        return texts.UNKNOWN_TEXT
 
     def on_data_loaded(self, payload):
         """Handle background worker success (dispatch to UI thread)."""

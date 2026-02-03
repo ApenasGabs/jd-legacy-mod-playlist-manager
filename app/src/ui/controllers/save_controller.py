@@ -181,9 +181,6 @@ class SaveController:
                 if output_dir.exists():
                     if os.name == "nt":
                         os.startfile(str(output_dir))
-                    elif os.name == "posix":
-                        import subprocess
-                        subprocess.Popen(["xdg-open", str(output_dir)])
         except Exception as e:
             logging.exception(f"Error finalizing save: {e}")
 

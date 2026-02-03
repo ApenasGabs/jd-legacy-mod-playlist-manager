@@ -25,6 +25,7 @@ from ..shared.filters import (
     TblSongsPlayColumnFilter,
     PlaylistsTreeDropFilter,
     TreeToSearchDropFilter,
+    TblSongsToSearchDropFilter,
     NoNewlineFilter,
 )
 from ..controllers.playlists_tree_controller import PlaylistsTreeController
@@ -84,6 +85,10 @@ class MainWindow(QMainWindow):
 
         # Track last selected row for Shift+Click range selection
         self.tblSongs_last_selected_row = None
+        self.tblSongs_shift_anchor_row = None
+        self.tblSongs_shift_active = False
+        self.tree_shift_anchor_item = None
+        self.tree_shift_active = False
 
         # Track last clicked source for debug shortcut
         self.last_click_source = None
@@ -188,6 +193,9 @@ class MainWindow(QMainWindow):
         self.ui.treePlaylists.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.ui.treePlaylists.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.ui.treePlaylists.setTextElideMode(Qt.ElideNone)
+        tree_header = self.ui.treePlaylists.header()
+        tree_header.setStretchLastSection(False)
+        tree_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.ui.treePlaylists.setStyleSheet(
             "QTreeWidget::item { padding-top: 3px; padding-bottom: 3px; padding-left: 6px; padding-right: 6px; }"
             "QTreeWidget:focus { outline: none; }"
@@ -255,10 +263,18 @@ class MainWindow(QMainWindow):
         if hasattr(self.ui, "txtSearchLocales"):
             self.ui.txtSearchLocales.setPlaceholderText(texts.PLACEHOLDER_SEARCH_ALL)
             self.ui.txtSearchLocales.textChanged.connect(self.locales_controller.filter_tblLocales)
+        if hasattr(self.ui, "txtSearchPlaylists"):
+            self.ui.txtSearchPlaylists.setPlaceholderText(texts.PLACEHOLDER_SEARCH_ALL)
+            self.ui.txtSearchPlaylists.setAcceptDrops(True)
+            if hasattr(self.ui.txtSearchPlaylists, "viewport"):
+                self.ui.txtSearchPlaylists.viewport().setAcceptDrops(True)
+            self.ui.txtSearchPlaylists.textChanged.connect(self.playlists_tree_controller.filter_tree_playlists)
         if hasattr(self.ui, "btnClearSearchSongs"):
             self.ui.btnClearSearchSongs.clicked.connect(self.songs_table_controller.on_btnClearSearchSongs_clicked)
         if hasattr(self.ui, "btnClearSearchLocales"):
             self.ui.btnClearSearchLocales.clicked.connect(self.locales_controller.on_btnClearSearchLocales_clicked)
+        if hasattr(self.ui, "btnClearSearchPlaylists"):
+            self.ui.btnClearSearchPlaylists.clicked.connect(self.playlists_tree_controller.on_btnClearSearchPlaylists_clicked)
 
         # Event filters
         self.tblSongs_play_filter = TblSongsPlayColumnFilter(
@@ -270,6 +286,9 @@ class MainWindow(QMainWindow):
         if hasattr(self.ui, "txtSearchSongs"):
             self.txtSongs_no_newline_filter = NoNewlineFilter(self.ui.txtSearchSongs)
             self.ui.txtSearchSongs.installEventFilter(self.txtSongs_no_newline_filter)
+        if hasattr(self.ui, "txtSearchPlaylists"):
+            self.txtPlaylists_no_newline_filter = NoNewlineFilter(self.ui.txtSearchPlaylists)
+            self.ui.txtSearchPlaylists.installEventFilter(self.txtPlaylists_no_newline_filter)
 
         self.tree_drop_filter = PlaylistsTreeDropFilter(
             self.ui.treePlaylists,
@@ -293,14 +312,34 @@ class MainWindow(QMainWindow):
         )
         self.ui.txtSearchLocales.installEventFilter(self.tree_to_search_locales_filter)
 
+        if hasattr(self.ui, "txtSearchPlaylists"):
+            self.tree_to_search_playlists_filter = TreeToSearchDropFilter(
+                self.ui.treePlaylists,
+                self.ui.txtSearchPlaylists,
+                "playlistSearch",
+            )
+            self.ui.txtSearchPlaylists.installEventFilter(self.tree_to_search_playlists_filter)
+            if hasattr(self.ui.txtSearchPlaylists, "viewport"):
+                self.ui.txtSearchPlaylists.viewport().installEventFilter(self.tree_to_search_playlists_filter)
+
+            self.tblsongs_to_search_playlists_filter = TblSongsToSearchDropFilter(
+                self.ui.tblSongs,
+                self.ui.txtSearchPlaylists,
+            )
+            self.ui.txtSearchPlaylists.installEventFilter(self.tblsongs_to_search_playlists_filter)
+            if hasattr(self.ui.txtSearchPlaylists, "viewport"):
+                self.ui.txtSearchPlaylists.viewport().installEventFilter(self.tblsongs_to_search_playlists_filter)
+
         # --- Table signals ---
         self.ui.tblSongs.cellClicked.connect(self.media_controller.on_tblSongs_cell_clicked)
         self.ui.tblSongs.itemSelectionChanged.connect(self.songs_table_controller.update_selected_count)
+        self.ui.treePlaylists.itemSelectionChanged.connect(self.playlists_tree_controller.update_selected_count)
+        self.ui.tblLocales.itemClicked.connect(lambda _item=None: self._set_last_click_source("tblLocales"))
+        self.ui.tblLocales.itemSelectionChanged.connect(lambda: self._set_last_click_source("tblLocales"))
         self.ui.tblSongs.currentCellChanged.connect(self.media_controller.on_tblSongs_current_cell_changed)
         self.songs_table_controller.update_selected_count()
-        self.ui.tblSongs.shortcut_select_all = QKeySequence(QKeySequence.SelectAll)
-        self.ui.tblSongs.shortcut_select_all = QShortcut(self.ui.tblSongs.shortcut_select_all, self.ui.tblSongs)
-        self.ui.tblSongs.shortcut_select_all.activated.connect(self.songs_table_controller.select_visible_rows)
+        self.shortcut_select_all = QShortcut(QKeySequence(QKeySequence.SelectAll), self)
+        self.shortcut_select_all.activated.connect(self._on_select_all_shortcut)
 
         # --- Media controls ---
         self.ui.btnPlay.clicked.connect(self.media_controller.on_btnPlay_clicked)
@@ -317,6 +356,11 @@ class MainWindow(QMainWindow):
         self.ui.btnAddSection.clicked.connect(lambda: self.section_controller.open(mode="create"))
         self.ui.btnEdit.clicked.connect(self._on_btnEdit_clicked)
         self.ui.btnAddPlaylist.clicked.connect(lambda: self.playlist_controller.open(mode="create"))
+        if hasattr(self.ui, "btnSelectAllPlaylists"):
+            self.ui.btnSelectAllPlaylists.clicked.connect(self.playlists_tree_controller.on_btnSelectAllPlaylists_clicked)
+            self.ui.btnSelectAllPlaylists.setEnabled(True)
+        if hasattr(self.ui, "btnClearSelectedPlaylists"):
+            self.ui.btnClearSelectedPlaylists.clicked.connect(self.playlists_tree_controller.on_btnClearSelectedPlaylists_clicked)
         if hasattr(self.ui, "btnSave"):
             self.ui.btnSave.clicked.connect(self.save_controller.on_btnSave_clicked)
         self.update_action_buttons()
@@ -353,6 +397,36 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logging.exception(f"Failed to update action buttons: {e}")
 
+    def _set_last_click_source(self, source: str):
+        try:
+            self.last_click_source = source
+        except Exception as e:
+            logging.exception(f"Failed to set last click source: {e}")
+
+    def _on_select_all_shortcut(self):
+        try:
+            focus_widget = QApplication.focusWidget()
+            if focus_widget and self._is_text_input_widget(focus_widget):
+                return
+            if focus_widget:
+                w = focus_widget
+                while w:
+                    if w == self.ui.tblLocales:
+                        return
+                    w = w.parent()
+
+            if self.last_click_source == "treePlaylists":
+                self.playlists_tree_controller.on_btnSelectAllPlaylists_clicked()
+                return
+
+            if self.last_click_source == "tblSongs":
+                self.songs_table_controller.select_visible_rows()
+                return
+
+            # Block Ctrl+A for tblLocales or unknown focus
+        except Exception as e:
+            logging.exception(f"Error handling Ctrl+A shortcut: {e}")
+
     def _reset_media_player(self, for_video=False):
         """Reset media player via controller (used by playlist clicks)."""
         try:
@@ -363,6 +437,11 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event):
         """Handle Delete key for treePlaylists removal"""
         try:
+            if event.key() == Qt.Key_Shift:
+                if not self.tblSongs_shift_active:
+                    self.tblSongs_shift_active = True
+                if not self.tree_shift_active:
+                    self.tree_shift_active = True
             if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
                 if self.ui.treePlaylists.hasFocus() or self.ui.treePlaylists.viewport().hasFocus():
                     self.playlists_tree_controller.on_delete_clicked()
@@ -384,6 +463,17 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logging.exception(f"Error handling key press: {e}")
         super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        try:
+            if event.key() == Qt.Key_Shift:
+                self.tblSongs_shift_active = False
+                self.tree_shift_active = False
+                self.tblSongs_shift_anchor_row = None
+                self.tree_shift_anchor_item = None
+        except Exception as e:
+            logging.exception(f"Error handling key release: {e}")
+        super().keyReleaseEvent(event)
 
     def _is_debug_shortcut_allowed(self):
         """Block debug shortcut while editing or typing in inputs."""

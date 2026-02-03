@@ -9,6 +9,8 @@ from .constants import (
     MISSING_SONG_CODE_ROLE,
     SONG_CODE_ROLE,
     PLAYLIST_ID_ROLE,
+    PLAYLIST_TITLE_TEXT_ROLE,
+    SECTION_TITLE_ROLE,
     TreeItemType,
 )
 from ..utils.utils import is_descendant_of
@@ -452,21 +454,26 @@ class TreeToSearchDropFilter(QObject):
         super().__init__(target_widget)
         self.tree = tree
         self.target_widget = target_widget
-        self.mode = mode  # "song" or "titleId"
+        self.mode = mode  # "song", "titleId", or "playlistSearch"
 
     def eventFilter(self, obj, event):
-        if obj != self.target_widget:
+        if obj != self.target_widget and obj != getattr(self.target_widget, "viewport", lambda: None)():
             return False
 
         if event.type() in (QEvent.DragEnter, QEvent.DragMove):
+            if not self._is_tree_source(event):
+                return False
             if self._is_valid_source_item(event):
-                event.setDropAction(Qt.CopyAction)
+                action = Qt.CopyAction if (event.possibleActions() & Qt.CopyAction) else event.proposedAction()
+                event.setDropAction(action)
                 event.accept()
                 return True
             event.ignore()
             return True
 
         if event.type() == QEvent.Drop:
+            if not self._is_tree_source(event):
+                return False
             if not self._is_valid_source_item(event):
                 event.ignore()
                 return True
@@ -485,12 +492,24 @@ class TreeToSearchDropFilter(QObject):
                 self.target_widget.setPlainText(str(value))
                 self.target_widget.moveCursor(QTextCursor.End)
                 self.target_widget.setFocus()
-                event.setDropAction(Qt.CopyAction)
+                action = Qt.CopyAction if (event.possibleActions() & Qt.CopyAction) else event.proposedAction()
+                event.setDropAction(action)
                 event.accept()
             except Exception as e:
                 logging.exception(f"Failed to handle drop into search field: {e}")
             return True
 
+        return False
+
+    def _is_tree_source(self, event):
+        try:
+            src = event.source()
+            if src in (self.tree, getattr(self.tree, "viewport", lambda: None)()):
+                return True
+            if src is None:
+                return self.tree is not None and (self.tree.selectedItems() or self.tree.currentItem())
+        except Exception:
+            return False
         return False
 
     def _get_selected_item(self):
@@ -506,7 +525,8 @@ class TreeToSearchDropFilter(QObject):
 
     def _is_valid_source_item(self, event):
         try:
-            if event.source() != self.tree:
+            src = event.source()
+            if src not in (self.tree, getattr(self.tree, "viewport", lambda: None)()) and src is not None:
                 return False
         except Exception:
             return False
@@ -517,6 +537,8 @@ class TreeToSearchDropFilter(QObject):
             return item_type == TreeItemType.SONG.value
         if self.mode == "titleId":
             return item_type in (TreeItemType.SECTION.value, TreeItemType.PLAYLIST.value)
+        if self.mode == "playlistSearch":
+            return item_type in (TreeItemType.SECTION.value, TreeItemType.PLAYLIST.value, TreeItemType.SONG.value)
         return False
 
     def _extract_value(self, item):
@@ -536,14 +558,109 @@ class TreeToSearchDropFilter(QObject):
         if self.mode == "titleId":
             if item_type not in (TreeItemType.SECTION.value, TreeItemType.PLAYLIST.value):
                 return None
-            title_id = None
+            title_text = None
             if item_type == TreeItemType.SECTION.value:
-                title_id = item.data(0, SECTION_TITLE_ID_ROLE)
-            if title_id is None:
+                title_text = item.data(0, SECTION_TITLE_ROLE)
+            if title_text is None and item_type == TreeItemType.PLAYLIST.value:
+                title_text = item.data(0, PLAYLIST_TITLE_TEXT_ROLE)
+            if title_text is None:
                 data = item.data(0, Qt.UserRole) or {}
-                title_id = data.get("titleId")
-            return title_id if title_id is not None else ""
+                title_text = data.get("titleText") or data.get("title")
+            return title_text if title_text is not None else ""
 
+        if self.mode == "playlistSearch":
+            if item_type == TreeItemType.SONG.value:
+                code = item.data(0, SONG_CODE_ROLE)
+                if code:
+                    return code
+                missing_code = item.data(0, MISSING_SONG_CODE_ROLE)
+                if missing_code:
+                    return missing_code
+                text = item.text(0) or ""
+                return text.split(":", 1)[0].strip()
+
+            if item_type == TreeItemType.SECTION.value:
+                title_text = item.data(0, SECTION_TITLE_ROLE)
+                if title_text is None:
+                    data = item.data(0, Qt.UserRole) or {}
+                    title_text = data.get("title")
+                return title_text if title_text is not None else (item.text(0) or "")
+
+            if item_type == TreeItemType.PLAYLIST.value:
+                title_text = item.data(0, PLAYLIST_TITLE_TEXT_ROLE)
+                if title_text is None:
+                    data = item.data(0, Qt.UserRole) or {}
+                    title_text = data.get("titleText")
+                return title_text if title_text is not None else (item.text(0) or "")
+
+        return None
+
+
+class TblSongsToSearchDropFilter(QObject):
+    """Enable drag/drop from tblSongs into search fields."""
+
+    def __init__(self, table, target_widget):
+        super().__init__(target_widget)
+        self.table = table
+        self.target_widget = target_widget
+
+    def eventFilter(self, obj, event):
+        if obj != self.target_widget and obj != getattr(self.target_widget, "viewport", lambda: None)():
+            return False
+
+        if event.type() in (QEvent.DragEnter, QEvent.DragMove):
+            if not self._is_valid_source(event):
+                return False
+            action = Qt.CopyAction if (event.possibleActions() & Qt.CopyAction) else event.proposedAction()
+            event.setDropAction(action)
+            event.accept()
+            return True
+
+        if event.type() == QEvent.Drop:
+            if not self._is_valid_source(event):
+                return False
+
+            value = self._get_selected_song_code()
+            if value is None:
+                return False
+
+            try:
+                self.target_widget.setPlainText(str(value))
+                self.target_widget.moveCursor(QTextCursor.End)
+                self.target_widget.setFocus()
+                action = Qt.CopyAction if (event.possibleActions() & Qt.CopyAction) else event.proposedAction()
+                event.setDropAction(action)
+                event.accept()
+            except Exception as e:
+                logging.exception(f"Failed to handle tblSongs drop into search field: {e}")
+            return True
+
+        return False
+
+    def _is_valid_source(self, event):
+        try:
+            if event.source() != self.table:
+                return False
+        except Exception:
+            return False
+        return self._get_selected_song_code() is not None
+
+    def _get_selected_song_code(self):
+        try:
+            selection = self.table.selectionModel()
+            if not selection:
+                return None
+            rows = selection.selectedRows(1)
+            if not rows:
+                rows = selection.selectedRows(0)
+            if not rows:
+                return None
+            row = rows[0].row()
+            item = self.table.item(row, 1) or self.table.item(row, 0)
+            if item:
+                return item.text().strip()
+        except Exception as e:
+            logging.exception(f"Failed to read selected tblSongs row for drop: {e}")
         return None
 
 

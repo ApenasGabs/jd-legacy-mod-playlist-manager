@@ -212,6 +212,10 @@ class SectionWindowController:
                 if hasattr(self.main_window, "update_action_buttons"):
                     self.main_window.update_action_buttons()
 
+            if hasattr(self.main_window, "playlists_tree_controller"):
+                self.main_window.playlists_tree_controller.apply_current_filter()
+                self.main_window.playlists_tree_controller.update_selected_count()
+
             self.section_window.close()
         except Exception as e:
             logging.exception(f"Error saving section: {e}")

@@ -216,6 +216,9 @@ class PlaylistWindowController:
         """Return the section item based on current tree selection."""
         item = self.main_window.ui.treePlaylists.currentItem()
         if not item:
+            tree = self.main_window.ui.treePlaylists
+            if tree.topLevelItemCount() > 0:
+                return tree.topLevelItem(0)
             return None
         item_type = item.data(0, TREE_ITEM_TYPE_ROLE)
         if item_type == TreeItemType.SECTION.value:
@@ -504,11 +507,16 @@ class PlaylistWindowController:
 
                 if hasattr(self.main_window, "playlists_tree_controller"):
                     self.main_window.playlists_tree_controller.update_section_requests(section_item)
+                    self.main_window.playlists_tree_controller.update_loaded_playlists_count()
 
                 if hasattr(self.playlist_window, "txtPlaylistTitleId"):
                     self.playlist_window.txtPlaylistTitleId.setText(title_id)
                 if hasattr(self.playlist_window, "txtPlaylistDescriptionId"):
                     self.playlist_window.txtPlaylistDescriptionId.setText(desc_id)
+
+            if hasattr(self.main_window, "playlists_tree_controller"):
+                self.main_window.playlists_tree_controller.apply_current_filter()
+                self.main_window.playlists_tree_controller.update_selected_count()
 
             self.playlist_window.close()
         except Exception as e:

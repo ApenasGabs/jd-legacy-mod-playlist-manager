@@ -18,8 +18,8 @@ ENV/
 
 # Runtime/generated data
 !app/runtime/.gitkeep
-app/runtime/
 !app/runtime/songs.json
+app/runtime/
 app/output/
 app/patch_nx_backups/
 app/**/temp/

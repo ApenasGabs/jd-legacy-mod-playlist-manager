@@ -53,6 +53,7 @@ class SongsTableController:
         try:
             self.main.ui.tblSongs.clearSelection()
             self.main.tblSongs_last_selected_row = None
+            self.main.tblSongs_shift_anchor_row = None
 
             search_text = self.main.ui.txtSearchSongs.toPlainText().lower()
             filter_empty = not search_text

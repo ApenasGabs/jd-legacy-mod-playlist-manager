@@ -8,6 +8,7 @@ Paths below are relative to app/.
 - requirements.txt: Python dependencies for the app.
 - python-version.txt: Python version used for local development.
 - src/app.py: application entry point.
+- src/config.py: central paths, runtime folders, and asset locations.
 - src/ui/windows/: top-level windows (main and dialogs).
 - src/ui/controllers/: UI controllers (logic and wiring).
 - src/ui/shared/: shared UI texts, dialogs, filters, delegates.
@@ -15,6 +16,7 @@ Paths below are relative to app/.
 - src/services/: data/IO services (read/write, transformation).
 - src/workers/: background tasks (QThread).
 - src/core/: enums and domain types.
+- src/utils/: IPK/localisation/cover helpers and misc utilities.
 - resources/: bundled, read-only assets shipped with the app.
 	- resources/assets/: icons, binaries, and packaging configs.
 	- resources/gui/: Qt Designer .ui files.
@@ -48,12 +50,39 @@ Paths below are relative to app/.
 ## Data Paths (important)
 - Bundled assets: resources/assets (read-only).
 	- default_cover.png is used by Playlist window.
-	- xtx_extract.exe and other tools are also here.
+	- xtx_extract.exe and texconv.exe are used for playlist cover conversion.
+	- justdance2026mode.act.ckd is the base ACT template for cover generation.
+	- config_ipk_packer.json is the default config used by the IPK tooling.
 - GUI layouts: resources/gui (read-only).
 - Runtime data: runtime/ (volatile).
   - extracted/ and temp/ hold intermediate data.
   - logs/ stores logs.
 - Output: output/ and patch_nx_backups/.
+
+## Config and Paths (src/config.py)
+- Uses a portable runtime root: when frozen, runtime/ is next to the .exe; otherwise, it is app/runtime.
+- Creates all runtime directories on startup (`setup_directories`).
+- Input root (`INPUT_MOD_ROOT_DIR`) is set by the UI; patch_nx.ipk and extracted file paths are derived from it.
+- Centralizes paths to external tools in resources/assets (texconv.exe, xtx_extract.exe, base ACT, config_ipk_packer.json).
+- Runtime temp folders: localisation JSON, playlist cover PNGs, and extraction folders.
+
+## Utilities (src/utils)
+- ipk_manager.py: pack/extract .ipk files (merged/extended UbiArt tools). Used by load/save flows.
+- localisation.py: loc8 ↔ JSON conversion (supports legacy mode). Used during load/save.
+- playlist_covers.py: converts PNG covers to DDS → TGA.CKD and builds ACT.CKD; also extracts TGA.CKD to PNG for previews.
+- utils.py: cover path resolution and 17-char name normalization helpers.
+- act.py: standalone dev script for editing ACT.CKD name/CRC (not used in app runtime).
+
+## Services and Workers
+- services/data_service.py: core data pipeline (extracts IPKs, converts covers, loads songs/locales/playlists).
+- services/save_service.py: save pipeline (delete pending covers → generate covers → write loc8 → save playlists → repack IPK).
+- workers/data_load_worker.py: background load stages for LoadMode (`json`, `extracted`, `ipk`).
+- workers/save_worker.py: background save runner with cancel support.
+
+## GUI Layout Files (resources/gui)
+- mainWindow.ui: main app layout, including playlists tree, songs/locales tables, and search inputs.
+- playlistWindow.ui: playlist editor dialog (ID, title/description IDs, cover path, and cover preview).
+- sectionWindow.ui: section editor dialog (title ID + text).
 
 ## Quick Cheatsheet ("where do I change X?")
 - Change main UI wiring: src/ui/windows/main_window.py
