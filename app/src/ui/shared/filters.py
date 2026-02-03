@@ -1,21 +1,18 @@
 import logging
 
 from PySide6.QtCore import Qt, QEvent, QObject, QTimer
-from PySide6.QtWidgets import QApplication, QAbstractItemView, QTreeWidgetItem
+from PySide6.QtWidgets import QApplication, QAbstractItemView, QTreeWidgetItem, QMessageBox
 from PySide6.QtGui import QFont, QTextCursor
 
 from .constants import (
     TREE_ITEM_TYPE_ROLE,
-    MISSING_SONG_MESSAGE_ROLE,
     MISSING_SONG_CODE_ROLE,
     SONG_CODE_ROLE,
     PLAYLIST_ID_ROLE,
-    PLAYLIST_DESCRIPTION_TEXT_ROLE,
-    PLAYLIST_COVER_PNG_PATH_ROLE,
-    PLAYLIST_TITLE_TEXT_ROLE,
     TreeItemType,
 )
 from ..utils.utils import is_descendant_of
+from ..shared import texts
 
 
 class GlobalFocusEventFilter(QObject):
@@ -121,10 +118,11 @@ class TblSongsPlayColumnFilter(QObject):
 class PlaylistsTreeDropFilter(QObject):
     """Validates drag/drop so items keep their hierarchy level"""
 
-    def __init__(self, tree, tblSongs):
+    def __init__(self, tree, tblSongs, playlists_tree_controller=None):
         super().__init__(tree)
         self.tree = tree
         self.tblSongs = tblSongs
+        self.playlists_tree_controller = playlists_tree_controller
 
     def eventFilter(self, obj, event):
         if obj not in (self.tree, self.tree.viewport()):
@@ -219,14 +217,49 @@ class PlaylistsTreeDropFilter(QObject):
         if not rows:
             return False
 
-        # Insert songs in order
-        offset = 0
+        selected_songs = []
         for row in rows:
             code_item = self.tblSongs.item(row, 1)
             if not code_item:
                 continue
-            song_code = code_item.text()
+            song_code = str(code_item.text())
             song_data = code_item.data(Qt.UserRole) or {}
+            selected_songs.append((song_code, song_data))
+
+        if not selected_songs:
+            return False
+
+        existing_codes = set()
+        for i in range(intended_parent.childCount()):
+            child = intended_parent.child(i)
+            if child and child.data(0, TREE_ITEM_TYPE_ROLE) == TreeItemType.SONG.value:
+                existing_codes.add(str(child.data(0, SONG_CODE_ROLE) or ""))
+
+        duplicates = [code for code, _ in selected_songs if code in existing_codes]
+        if duplicates:
+            msg = QMessageBox(self.tree)
+            msg.setIcon(QMessageBox.Warning)
+            msg.setWindowTitle(texts.SONGS_DUPLICATE_TITLE)
+            msg.setText(texts.SONGS_DUPLICATE_TEXT.format(
+                duplicates=len(duplicates),
+                total=len(selected_songs),
+            ))
+            btn_add_all = msg.addButton(texts.SONGS_DUPLICATE_ADD_ALL, QMessageBox.AcceptRole)
+            btn_add_unique = msg.addButton(texts.SONGS_DUPLICATE_ADD_UNIQUE, QMessageBox.ActionRole)
+            btn_add_none = msg.addButton(texts.SONGS_DUPLICATE_ADD_NONE, QMessageBox.RejectRole)
+            msg.setDefaultButton(btn_add_unique)
+            msg.exec()
+            clicked = msg.clickedButton()
+            if clicked == btn_add_none:
+                return False
+            if clicked == btn_add_unique:
+                selected_songs = [(code, data) for code, data in selected_songs if code not in existing_codes]
+                if not selected_songs:
+                    return False
+
+        # Insert songs in order
+        offset = 0
+        for song_code, song_data in selected_songs:
             new_item = self._create_song_item(intended_parent, song_code, song_data)
             if insert_index != -1:
                 intended_parent.takeChild(intended_parent.indexOfChild(new_item))
@@ -280,6 +313,10 @@ class PlaylistsTreeDropFilter(QObject):
             if not section_item:
                 return
             if self._get_item_type(section_item) != TreeItemType.SECTION.value:
+                return
+
+            if self.playlists_tree_controller:
+                self.playlists_tree_controller.update_section_requests(section_item)
                 return
 
             requests = []

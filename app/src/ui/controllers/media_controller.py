@@ -390,10 +390,24 @@ class MediaController:
             except Exception as e:
                 logging.exception(f"Failed to set default audio device: {e}")
             self.media_player.setAudioOutput(self.audio_output)
+            self.apply_current_volume()
             return True
         except Exception as e:
             logging.exception(f"Failed to reinitialize audio output: {e}")
             return False
+
+    def apply_current_volume(self):
+        """Apply the current volume slider value to the audio output."""
+        try:
+            if not self.audio_output:
+                return
+            volume_controller = getattr(self.main, "volume_controller", None)
+            if not volume_controller:
+                return
+            volume = volume_controller.get_volume()
+            self.audio_output.setVolume(volume)
+        except Exception as e:
+            logging.exception(f"Failed to apply current volume: {e}")
 
     def refresh_default_audio_output(self):
         """Refresh audio output device to the current Windows default"""
@@ -410,6 +424,7 @@ class MediaController:
             # Rebind device to current default
             self.audio_output.setDevice(default_device)
             self.media_player.setAudioOutput(self.audio_output)
+            self.apply_current_volume()
             try:
                 self.last_default_audio_device_id = default_device.id()
             except Exception:
@@ -427,6 +442,7 @@ class MediaController:
                 return
             self.audio_output.setDevice(device)
             self.media_player.setAudioOutput(self.audio_output)
+            self.apply_current_volume()
             try:
                 self.last_default_audio_device_id = device.id()
             except Exception:
@@ -486,22 +502,45 @@ class MediaController:
             return
 
         if modifiers == Qt.ShiftModifier and self.main.tblSongs_last_selected_row is not None:
-            # Range selection with Shift - select all rows in range (inclusive)
-            start_row = min(self.main.tblSongs_last_selected_row, row)
-            end_row = max(self.main.tblSongs_last_selected_row, row)
+            # Range selection with Shift - select only visible rows in range
+            visible_rows = [
+                r for r in range(self.main.ui.tblSongs.rowCount())
+                if not self.main.ui.tblSongs.isRowHidden(r)
+            ]
+            if not visible_rows:
+                return
 
-            # Use QItemSelection for proper range selection
+            try:
+                start_index = visible_rows.index(self.main.tblSongs_last_selected_row)
+            except ValueError:
+                start_index = None
+
+            try:
+                end_index = visible_rows.index(row)
+            except ValueError:
+                end_index = None
+
+            if start_index is None or end_index is None:
+                # Fallback to normal click if anchor is not visible
+                logging.debug("Shift selection anchor not visible; falling back to single selection")
+                self.main.tblSongs_last_selected_row = row
+                self.load_video_for_row(row)
+                return
+
+            start_index, end_index = sorted((start_index, end_index))
+
             selection = QItemSelection()
-            for r in range(start_row, end_row + 1):
-                if not self.main.ui.tblSongs.isRowHidden(r):
-                    # Select entire row from column 0 to last column
-                    top_left = self.main.ui.tblSongs.model().index(r, 0)
-                    bottom_right = self.main.ui.tblSongs.model().index(r, self.main.ui.tblSongs.columnCount() - 1)
-                    selection.select(top_left, bottom_right)
+            for r in visible_rows[start_index:end_index + 1]:
+                top_left = self.main.ui.tblSongs.model().index(r, 0)
+                bottom_right = self.main.ui.tblSongs.model().index(r, self.main.ui.tblSongs.columnCount() - 1)
+                selection.select(top_left, bottom_right)
 
-            # Apply selection
-            self.main.ui.tblSongs.selectionModel().select(selection, QItemSelectionModel.Select)
-            logging.debug(f"Selected range: rows {start_row} to {end_row}")
+            self.main.ui.tblSongs.selectionModel().clearSelection()
+            self.main.ui.tblSongs.selectionModel().select(selection, QItemSelectionModel.ClearAndSelect)
+            self.main.tblSongs_last_selected_row = row
+            logging.debug(
+                f"Selected visible range: rows {visible_rows[start_index]} to {visible_rows[end_index]}"
+            )
         else:
             # Normal click - play audio/video based on column
             logging.info("Songs table action: load video")

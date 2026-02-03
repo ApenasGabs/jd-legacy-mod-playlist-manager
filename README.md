@@ -263,7 +263,7 @@ When you select a row in the section/playlist tree or the song table and press C
 ---
 
 ## FAQ
-**Q1: Does this tool add new songs to the game?**  
+**Q1: Does this tool removes or add new songs to the game?**  
 A: No. It only manages and organizes playlists for songs that are already present in your MOD files. It does not bypass any game limitations or inject new audio/video assets.
 
 **Q2: Is it compatible with other Just Dance versions?**  
@@ -309,7 +309,7 @@ If you wish to run from source, clone the repository, install dependencies and r
    * IPK files - [ubiart-archive-tools](https://github.com/PartyService/ubiart-archive-tools) by ***PartyService***
    * Textures/covers images - [NX-UbiArt-Texture-Maker](https://github.com/RN-JK/NX-UbiArt-Texture-Maker) by **RN-JK**
    * Localisation files - [ubiart-loc8-converter](https://github.com/wukko/ubiart-loc8-converter) by **wukko**
-* **Testers:** Me and my friends: Bruno, Giulia and Kelvin
+* **Testers:** Me and my friends: Bruno and Giulia
 
 As a developer in the LGBTQIAPN+ 🏳️‍🌈 community of Just Dance fans, I'm very grateful to the LGBTQIAPN+ Just Dance fan community and the Legacy MOD creators for making Just Dance more accessible.
 

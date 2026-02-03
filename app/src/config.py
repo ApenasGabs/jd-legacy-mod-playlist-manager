@@ -88,6 +88,7 @@ INPUT_SECTIONS_FILE = INPUT_GAMECONFIG_FOLDER / "gc_carousel_rules.json.ckd"
 INPUT_PLAYLISTS_FILE = INPUT_GAMECONFIG_FOLDER / "playlists.json.ckd"
 INPUT_COVERS_FOLDER = INPUT_PATCH_NX_FOLDER / "cache" / "itf_cooked" / "nx" / "world" / "ui" / "textures" / "covers" / "playlists_offline"
 XTX_EXTRACT_EXE = ASSETS_DIR / "xtx_extract.exe"
+TEXCONV_EXE = ASSETS_DIR / "texconv.exe"
 BASE_ACT_FILE = ASSETS_DIR / "justdance2026mode.act.ckd"
 CONFIG_IPK_PACKER = ASSETS_DIR / "config_ipk_packer.json"
 

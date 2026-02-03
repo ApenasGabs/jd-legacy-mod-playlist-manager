@@ -3,8 +3,9 @@ from PySide6.QtGui import QPixmap, QImage, QImageReader, QPixmapCache
 import os
 from collections import OrderedDict
 
-_COVER_CACHE_LIMIT = None
+_COVER_CACHE_LIMIT = 100
 _cover_cache_keys = OrderedDict()
+
 
 
 def load_pixmap_with_fallback(path):
@@ -123,5 +124,5 @@ def prewarm_cover_cache(paths, target_w, target_h, progress_callback=None):
                 QPixmapCache.remove(old_key)
         warmed += 1
         if progress_callback:
-            progress_callback(idx, len(paths))
+            progress_callback(idx, len(paths), path)
     return warmed

@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import OrderedDict
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QBrush, QColor, QFont, QPixmap, QTextCursor
@@ -72,13 +73,12 @@ class PlaylistsTreeController:
                 if maps_list is None:
                     maps_list = playlist_data.get("songs", [])
 
-                role_data = {
-                    "__class": playlist_data.get("__class", "OfflinePlaylist"),
-                    "titleId": playlist_data.get("titleId", ""),
-                    "descriptionId": playlist_data.get("descriptionId", ""),
-                    "coverPath": playlist_data.get("coverPath", ""),
-                    "maps": list(maps_list or []),
-                }
+                role_data = OrderedDict()
+                role_data["__class"] = playlist_data.get("__class", "OfflinePlaylist")
+                role_data["titleId"] = playlist_data.get("titleId", "")
+                role_data["descriptionId"] = playlist_data.get("descriptionId", "")
+                role_data["coverPath"] = playlist_data.get("coverPath", "")
+                role_data["maps"] = list(maps_list or [])
 
                 playlist_item = QTreeWidgetItem(section_item)
                 playlist_item.setText(0, f'{playlist_id}: "{title_text} - {description_text}"')
@@ -128,14 +128,14 @@ class PlaylistsTreeController:
             self.update_section_requests(section_item)
 
     def _build_section_role_data(self, title, title_id, requests_list):
-        return {
-            "__class": "CategoryRule",
-            "act": "ui_carousel",
-            "isc": "grp_row",
-            "title": title,
-            "titleId": title_id,
-            "requests": list(requests_list or []),
-        }
+        data = OrderedDict()
+        data["__class"] = "CategoryRule"
+        data["act"] = "ui_carousel"
+        data["isc"] = "grp_row"
+        data["title"] = title
+        data["titleId"] = title_id
+        data["requests"] = list(requests_list or [])
+        return data
 
     def _build_section_requests(self, section_item):
         requests = []
@@ -148,13 +148,13 @@ class PlaylistsTreeController:
             playlist_id = playlist_item.data(0, PLAYLIST_ID_ROLE)
             if not playlist_id:
                 continue
-            requests.append({
-                "__class": "JD_CarouselPlaylistsRequestDesc",
-                "isc": "grp_row",
-                "act": "ui_carousel",
-                "type": "edito-pinned",
-                "playlistID": playlist_id,
-            })
+            req = OrderedDict()
+            req["__class"] = "JD_CarouselPlaylistsRequestDesc"
+            req["act"] = "ui_carousel"
+            req["isc"] = "grp_row"
+            req["playlistID"] = playlist_id
+            req["type"] = "edito-pinned"
+            requests.append(req)
         return requests
 
     def update_section_requests(self, section_item):
@@ -246,20 +246,28 @@ class PlaylistsTreeController:
                 self.main_window.ui.lblImg.setText("")
                 return
 
+            cover_item = None
             if item_type == TreeItemType.PLAYLIST.value:
+                cover_item = item
+            elif item_type == TreeItemType.SONG.value:
+                parent = item.parent()
+                if parent and parent.data(0, TREE_ITEM_TYPE_ROLE) == TreeItemType.PLAYLIST.value:
+                    cover_item = parent
+
+            if cover_item is not None:
                 # Clear any playing media/video before showing cover (only if playback is active)
                 if hasattr(self.main_window, "media_controller"):
                     mc = self.main_window.media_controller
                     if getattr(mc, "current_media_path", None) or getattr(mc, "is_playing", False):
                         self.main_window._reset_media_player(for_video=False)
-                cover_path = item.data(0, PLAYLIST_COVER_PNG_PATH_ROLE) or ""
+                cover_path = cover_item.data(0, PLAYLIST_COVER_PNG_PATH_ROLE) or ""
                 if not cover_path:
-                    data = item.data(0, Qt.UserRole) or {}
+                    data = cover_item.data(0, Qt.UserRole) or {}
                     cover_path = data.get("coverPngPath", "")
                 if cover_path == self._last_cover_path:
                     return
                 self._last_cover_path = cover_path
-                logging.debug(f"Playlist click: coverPngPath={cover_path}")
+                logging.debug(f"Playlist cover set: coverPngPath={cover_path}")
                 if cover_path:
                     if set_label_pixmap(self.main_window.ui.lblImg, cover_path) is False:
                         logging.error("Failed to load cover image: %s", cover_path)
@@ -272,6 +280,7 @@ class PlaylistsTreeController:
             else:
                 self.main_window.ui.lblImg.setPixmap(QPixmap())
                 self.main_window.ui.lblImg.setText("")
+                self._last_cover_path = ""
         except Exception as e:
             logging.exception(f"Error handling playlist click: {e}")
 

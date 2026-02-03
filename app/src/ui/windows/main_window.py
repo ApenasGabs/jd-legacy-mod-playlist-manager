@@ -1,7 +1,8 @@
 import sys
+import json
 from ... import config
 import logging
-from PySide6.QtWidgets import QMainWindow, QApplication, QMessageBox, QAbstractItemView, QHeaderView, QVBoxLayout, QDialog, QPlainTextEdit, QDialogButtonBox, QLineEdit, QTextEdit, QComboBox
+from PySide6.QtWidgets import QMainWindow, QApplication, QAbstractItemView, QHeaderView, QVBoxLayout, QDialog, QPlainTextEdit, QDialogButtonBox, QLineEdit, QTextEdit, QComboBox
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QFont, QPixmap, QIcon, QShortcut
@@ -18,11 +19,9 @@ from ..shared.constants import (
     TreeItemType,
 )
 from ..shared import texts
-from ..shared.dialogs import show_info, show_warning, show_error
+from ..shared.dialogs import show_info, show_error
 from ..shared.delegates import MultiLineDelegate
 from ..shared.filters import (
-    GlobalFocusEventFilter,
-    FocusLossEventFilter,
     TblSongsPlayColumnFilter,
     PlaylistsTreeDropFilter,
     TreeToSearchDropFilter,
@@ -66,6 +65,13 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.ui)
         self.setWindowTitle(texts.APP_TITLE)
+
+        # Increase pixmap cache to reduce cover load lag
+        try:
+            from PySide6.QtGui import QPixmapCache
+            QPixmapCache.setCacheLimit(256 * 1024)
+        except Exception as e:
+            logging.exception(f"Failed to set pixmap cache limit: {e}")
 
         # Apply application/window icon (also affects dialogs)
         self._apply_app_icon()
@@ -265,7 +271,11 @@ class MainWindow(QMainWindow):
             self.txtSongs_no_newline_filter = NoNewlineFilter(self.ui.txtSearchSongs)
             self.ui.txtSearchSongs.installEventFilter(self.txtSongs_no_newline_filter)
 
-        self.tree_drop_filter = PlaylistsTreeDropFilter(self.ui.treePlaylists, self.ui.tblSongs)
+        self.tree_drop_filter = PlaylistsTreeDropFilter(
+            self.ui.treePlaylists,
+            self.ui.tblSongs,
+            self.playlists_tree_controller,
+        )
         self.ui.treePlaylists.installEventFilter(self.tree_drop_filter)
         self.ui.treePlaylists.viewport().installEventFilter(self.tree_drop_filter)
 
@@ -443,7 +453,7 @@ class MainWindow(QMainWindow):
                 return "<unserializable>"
 
         try:
-            return json.dumps(data, ensure_ascii=False, indent=2, default=_default)
+            return json.dumps(data, ensure_ascii=False, indent="\t", default=_default)
         except Exception as e:
             logging.exception(f"Failed to serialize debug data: {e}")
             return str(data)
@@ -558,22 +568,6 @@ class MainWindow(QMainWindow):
                 pass
         except Exception as e:
             logging.exception(f"Failed to disable media playback UI: {e}")
-
-    def _clear_directory_contents(self, directory_path, log_label=None):
-        """Delete all files and subfolders inside a directory."""
-        try:
-            label = log_label or str(directory_path)
-            logging.info(f"Clearing directory contents: {label}")
-            if not directory_path.exists():
-                return
-            for item in directory_path.iterdir():
-                if item.is_dir():
-                    shutil.rmtree(item)
-                else:
-                    item.unlink()
-                QApplication.processEvents()
-        except Exception as e:
-            logging.exception(f"Failed to clear directory contents ({directory_path}): {e}")
 
     def begin(self):
         """Start the initial load flow."""

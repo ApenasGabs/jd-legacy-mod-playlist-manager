@@ -27,6 +27,7 @@ UNKNOWN_TEXT = "Unknown"
 # Buttons
 BUTTON_PLAY = "Play"
 BUTTON_PAUSE = "Pause"
+BUTTON_CANCEL = "Cancel"
 BUTTON_REEXTRACT_ALL = "Re-extract All"
 BUTTON_LOAD_EXISTING = "Load Existing"
 
@@ -65,6 +66,8 @@ SAVE_FOOTER_TEXT = (
     "This may take a while, but it is working.\n\n"
     "Please do not close this application."
 )
+SAVE_CONFIRM_TITLE = "Confirm Save"
+SAVE_CONFIRM_TEXT = "Do you really want to save the changes?"
 SAVE_COMPLETED_TEXT = (
     "All changes have been saved successfully.\n"
     "The output patch.nx file has been created. Now you just need to copy it to your game's mods folder [romfs].\n"
@@ -121,6 +124,12 @@ LOADING_FOOTER_TEXT = (
 )
 LOADING_STATUS_DEFAULT = "0% - Starting..."
 PROGRESS_STATUS_FORMAT = "{percent}% - {message}"
+LOADING_CANCEL_CONFIRM_TITLE = "Cancel Loading"
+LOADING_CANCEL_CONFIRM_TEXT = (
+    "Do you really want to cancel the loading process?\n\n"
+    "This will permanently delete everything inside the 'extracted' folder."
+)
+LOADING_CANCELING_TEXT = "Cancelling... please wait."
 
 # Load progress messages
 LOAD_PROGRESS_START = "Starting"
@@ -131,6 +140,8 @@ LOAD_PROGRESS_CLEAR_TEMP = "Clearing temp data"
 LOAD_PROGRESS_LOCALISATION = "Decompressing localisation"
 LOAD_PROGRESS_COVERS = "Extracting playlist covers"
 LOAD_PROGRESS_PRELOAD_COVERS = "Preloading playlist covers"
+LOAD_PROGRESS_PRELOAD_COVERS_ITEM = "Preloading playlist covers: {name}"
+LOAD_PROGRESS_PRELOAD_COVERS_ITEM_COUNT = "Preloading playlist covers ({idx}/{total}): {name}"
 LOAD_PROGRESS_LOCALES = "Loading localisation"
 LOAD_PROGRESS_SONGS = "Loading songs"
 LOAD_PROGRESS_SAVE_SONGS = "Saving songs.json"
@@ -144,6 +155,12 @@ SAVE_STEP_SAVE_LOCALISATION = "Saving localisation"
 SAVE_STEP_SAVE_PLAYLISTS = "Saving playlists"
 SAVE_STEP_REPACK = "Repacking patch_nx"
 SAVE_PROGRESS_DONE = "Done"
+SAVE_CANCEL_CONFIRM_TITLE = "Cancel Saving"
+SAVE_CANCEL_CONFIRM_TEXT = (
+    "Do you really want to cancel the saving process?\n\n"
+    "This will permanently delete everything inside the 'output' folder."
+)
+SAVE_CANCELING_TEXT = "Cancelling... please wait."
 
 # MOD folder selection
 MOD_FOLDER_PROMPT = (
@@ -200,6 +217,7 @@ SECTION_INVALID_NAME = "Section name cannot be empty."
 PLAYLIST_INVALID_ID = (
     "The chosen Playlist ID is invalid. Please use only letters and numbers, up to 17 characters."
 )
+PLAYLIST_DUPLICATE_ID = "This Playlist ID already exists. Please choose a different ID."
 PLAYLIST_INVALID_TEXT = "Playlist title and description cannot be empty."
 PLAYLIST_INVALID_COVER = "Please select a valid PNG cover image."
 PLAYLIST_INVALID_IMAGE = "The selected file could not be loaded as a PNG image."
@@ -260,6 +278,17 @@ TREE_DELETE_CONFIRM = (
 )
 TREE_DELETE_CONFIRM_MULTI = "You are about to delete {count} item(s).\n\nDo you want to continue?"
 TREE_NO_SELECTION = "No items selected in the playlists tree."
+
+SONGS_DUPLICATE_TITLE = "Duplicate Songs Detected"
+SONGS_DUPLICATE_TEXT = (
+    "Some of the dragged songs are already in this playlist.\n"
+    "Duplicates found: {duplicates}\n"
+    "Total dragged: {total}\n\n"
+    "What do you want to do?"
+)
+SONGS_DUPLICATE_ADD_ALL = "Add all (allow duplicates)"
+SONGS_DUPLICATE_ADD_NONE = "Add none"
+SONGS_DUPLICATE_ADD_UNIQUE = "Add only new songs"
 
 SONG_NOT_FOUND_TITLE = "Song not found in the Manager's songs database"
 SONG_NOT_FOUND_ACTION = "Search similar song"

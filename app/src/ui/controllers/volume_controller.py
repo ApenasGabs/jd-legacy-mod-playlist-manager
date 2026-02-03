@@ -71,6 +71,16 @@ class VolumeController(QObject):
         except Exception as e:
             logging.exception(f"Failed to apply volume: {e}")
 
+    def get_volume(self) -> float:
+        """Return the current slider volume (0.0 - 1.0)."""
+        try:
+            slider = getattr(self.main.ui, "sldVolume", None)
+            if slider:
+                self._volume = max(0.0, min(1.0, slider.value() / 100.0))
+        except Exception as e:
+            logging.exception(f"Failed to read volume slider: {e}")
+        return self._volume
+
     def set_enabled(self, enabled: bool):
         slider = getattr(self.main.ui, "sldVolume", None)
         if not slider:

@@ -12,6 +12,10 @@ ENV/
 **/logs/
 **/*.log
 
+# Resources files
+!app/resources/assets/*.*
+!app/resources/gui/*.*
+
 # Runtime/generated data
 !app/runtime/.gitkeep
 app/runtime/
@@ -46,5 +50,7 @@ dist/
 *.spec
 main.build/
 main.dist/
-*.exe
 app/build_output/
+app/src/utils/act.py
+app/src/utils/NX_TGACKD.py
+

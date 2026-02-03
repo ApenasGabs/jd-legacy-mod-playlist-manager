@@ -1,10 +1,11 @@
 import json
 import logging
+from collections import OrderedDict
 import re
 import shutil
 
 from PySide6.QtCore import Qt, QRegularExpression
-from PySide6.QtGui import QFont, QBrush, QColor, QImage, QPixmap, QRegularExpressionValidator
+from PySide6.QtGui import QFont, QBrush, QColor, QImage, QRegularExpressionValidator
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMessageBox, QTreeWidgetItem, QFileDialog
 
@@ -226,6 +227,30 @@ class PlaylistWindowController:
             return parent.parent() if parent else None
         return None
 
+    def _playlist_id_exists(self, playlist_id, exclude_item=None) -> bool:
+        """Check if a playlist ID already exists in the tree (case-insensitive)."""
+        try:
+            if not playlist_id:
+                return False
+            target = str(playlist_id).strip().lower()
+            tree = self.main_window.ui.treePlaylists
+            for i in range(tree.topLevelItemCount()):
+                section_item = tree.topLevelItem(i)
+                if not section_item:
+                    continue
+                for j in range(section_item.childCount()):
+                    playlist_item = section_item.child(j)
+                    if not playlist_item or playlist_item is exclude_item:
+                        continue
+                    if playlist_item.data(0, TREE_ITEM_TYPE_ROLE) != TreeItemType.PLAYLIST.value:
+                        continue
+                    existing_id = playlist_item.data(0, PLAYLIST_ID_ROLE)
+                    if existing_id and str(existing_id).strip().lower() == target:
+                        return True
+        except Exception as e:
+            logging.exception(f"Failed to validate duplicate playlist ID: {e}")
+        return False
+
     def on_save(self):
         """Create a new playlist from the Playlist window."""
         try:
@@ -241,6 +266,16 @@ class PlaylistWindowController:
                     self.playlist_window,
                     texts.TITLE_WARNING,
                     texts.PLAYLIST_INVALID_ID,
+                )
+                return
+
+            mode = getattr(self.playlist_window, "_mode", "create")
+            exclude_item = getattr(self.playlist_window, "_tree_item", None) if mode == "edit" else None
+            if self._playlist_id_exists(playlist_id, exclude_item=exclude_item):
+                QMessageBox.warning(
+                    self.playlist_window,
+                    texts.TITLE_WARNING,
+                    texts.PLAYLIST_DUPLICATE_ID,
                 )
                 return
 
@@ -301,7 +336,6 @@ class PlaylistWindowController:
                 QMessageBox.critical(self.playlist_window, texts.TITLE_ERROR, texts.PLAYLIST_ERROR_VALIDATE_COVER.format(error=e))
                 return
 
-            mode = getattr(self.playlist_window, "_mode", "create")
             if mode != "edit":
                 section_item = self._get_target_section_item()
                 if not section_item or section_item.data(0, TREE_ITEM_TYPE_ROLE) != TreeItemType.SECTION.value:
@@ -418,13 +452,12 @@ class PlaylistWindowController:
                 section_item = playlist_item.parent()
                 existing = playlist_item.data(0, Qt.UserRole) or {}
                 maps_list = existing.get("maps", existing.get("songs", []))
-                playlist_data = {
-                    "__class": existing.get("__class", "OfflinePlaylist"),
-                    "titleId": title_id,
-                    "descriptionId": desc_id,
-                    "coverPath": cover_act_path or existing.get("coverPath", ""),
-                    "maps": list(maps_list or []),
-                }
+                playlist_data = OrderedDict()
+                playlist_data["__class"] = existing.get("__class", "OfflinePlaylist")
+                playlist_data["titleId"] = title_id
+                playlist_data["descriptionId"] = desc_id
+                playlist_data["coverPath"] = cover_act_path or existing.get("coverPath", "")
+                playlist_data["maps"] = list(maps_list or [])
                 playlist_item.setData(0, PLAYLIST_ID_ROLE, playlist_id)
                 playlist_item.setData(0, PLAYLIST_TITLE_TEXT_ROLE, title_text)
                 playlist_item.setData(0, PLAYLIST_DESCRIPTION_TEXT_ROLE, desc_text)
@@ -439,13 +472,12 @@ class PlaylistWindowController:
                 # Refresh main cover preview if still selected
                 self.main_window.playlists_tree_controller.on_item_clicked(playlist_item, 0)
             else:
-                playlist_data = {
-                    "__class": "OfflinePlaylist",
-                    "titleId": title_id,
-                    "descriptionId": desc_id,
-                    "coverPath": cover_act_path,
-                    "maps": []
-                }
+                playlist_data = OrderedDict()
+                playlist_data["__class"] = "OfflinePlaylist"
+                playlist_data["titleId"] = title_id
+                playlist_data["descriptionId"] = desc_id
+                playlist_data["coverPath"] = cover_act_path
+                playlist_data["maps"] = []
 
                 playlist_item = QTreeWidgetItem(section_item)
                 playlist_item.setText(0, f'{playlist_id}: "{title_text} - {desc_text}"')

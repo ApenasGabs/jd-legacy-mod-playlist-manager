@@ -7,6 +7,7 @@ from pathlib import Path
 from .. import config
 from ..utils import playlist_covers as playlist_covers
 from ..utils import ipk_manager as ipk_manager
+from ..utils import utils as utils
 from ..ui.shared import texts
 
 
@@ -33,31 +34,6 @@ class DataService:
             "missing_code": missing_code,
         }
 
-    def _resolve_cover_png_path(self, cover_path):
-        """Resolve cover PNG path from playlists metadata."""
-        if not cover_path:
-            return ""
-        try:
-            path_value = Path(cover_path)
-            if path_value.is_absolute() and path_value.exists():
-                return str(path_value)
-
-            name = path_value.name
-            while True:
-                stem = Path(name).stem
-                if stem == name:
-                    break
-                name = stem
-
-            candidates = [name, name.lower(), name.upper()]
-            for candidate_name in candidates:
-                candidate = config.TEMP_PLAYLISTS_COVERS / f"{candidate_name}.png"
-                if candidate.exists():
-                    return str(candidate)
-        except Exception as e:
-            logging.exception(f"Failed to resolve cover PNG path: {cover_path} | {e}")
-        logging.warning("coverPngPath not found for coverPath=%s", cover_path)
-        return ""
 
     def _parse_songdesc_file(self, songdesc_ckd_path: Path):
         """Parse songdesc.tpl.ckd and return song JSON or (None, error message)."""
@@ -106,20 +82,52 @@ class DataService:
             "FullData": song_json,
         }
 
-    def clear_directory_contents_worker(self, directory_path, log_label=None):
+    def clear_directory_contents_worker(self, directory_path, log_label=None, progress_callback=None):
         """Delete all files and subfolders inside a directory (worker-safe)."""
         label = log_label or str(directory_path)
         logging.info(f"Clearing directory contents: {label}")
         if not directory_path.exists():
-            return
-        for item in directory_path.iterdir():
-            if item.is_dir():
-                import shutil
-                shutil.rmtree(item)
-            else:
-                item.unlink()
+            return {"deleted": 0, "failed": 0, "remaining": 0}
+        items = list(directory_path.iterdir())
+        total = len(items)
+        deleted = 0
+        failed = 0
+        for idx, item in enumerate(items, start=1):
+            try:
+                if item.is_dir():
+                    import os
+                    import shutil
+                    def _onerror(func, path, exc_info):
+                        try:
+                            os.chmod(path, 0o700)
+                            func(path)
+                        except Exception:
+                            pass
+                    shutil.rmtree(item, onerror=_onerror)
+                else:
+                    item.unlink()
+                deleted += 1
+            except Exception as e:
+                failed += 1
+                logging.warning(f"Failed to delete item [{item}]: {e}")
+            if progress_callback:
+                try:
+                    progress_callback(idx, total, item.name)
+                except Exception:
+                    pass
+        try:
+            remaining = len(list(directory_path.iterdir()))
+        except Exception:
+            remaining = 0
+        logging.info(
+            "Clearing directory contents done: deleted=%s failed=%s remaining=%s",
+            deleted,
+            failed,
+            remaining,
+        )
+        return {"deleted": deleted, "failed": failed, "remaining": remaining}
 
-    def ensure_patch_nx_extracted_worker(self):
+    def ensure_patch_nx_extracted_worker(self, progress_callback=None):
         """Extract patch_nx.ipk only if patch_nx folder is missing (worker-safe)."""
         patch_folder = config.EXTRACTED_DIR / "patch_nx"
         if patch_folder.exists():
@@ -131,9 +139,9 @@ class DataService:
 
         logging.info("Extracting patch_nx.ipk only...")
         patch_folder.mkdir(parents=True, exist_ok=True)
-        ipk_manager.extract(patch_ipk, output_dir=patch_folder)
+        ipk_manager.extract(patch_ipk, output_dir=patch_folder, progress_callback=progress_callback)
 
-    def extract_mod_files_worker(self):
+    def extract_mod_files_worker(self, progress_callback=None, cancel_check=None):
         """Extract all .ipk files without UI interactions (worker-safe)."""
         ipk_files = list(config.INPUT_MOD_ROOT_DIR.glob("*.ipk"))
         if not ipk_files:
@@ -141,13 +149,22 @@ class DataService:
 
         logging.info(f"Found {len(ipk_files)} .ipk files to extract.")
         error_files = []
-        for ipk in ipk_files:
+        total = len(ipk_files)
+        for idx, ipk in enumerate(ipk_files, start=1):
+            if cancel_check and cancel_check():
+                logging.info("IPK extraction cancelled by user.")
+                return
+            if progress_callback:
+                progress_callback(idx, total, ipk.name)
             output_folder = config.EXTRACTED_DIR / ipk.stem
             output_folder.mkdir(exist_ok=True)
             logging.info(f"Extracting file [{ipk.name}] to folder [{output_folder}]")
             try:
-                ipk_manager.extract(ipk, output_dir=output_folder)
+                ipk_manager.extract(ipk, output_dir=output_folder, cancel_check=cancel_check)
             except Exception as e:
+                if cancel_check and cancel_check():
+                    logging.info("IPK extraction cancelled by user.")
+                    return
                 error_files.append(ipk.name)
                 logging.exception(f"Error extracting:\n{ipk.name}\nError: {e}")
             else:
@@ -158,18 +175,25 @@ class DataService:
 
         logging.info("IPK extraction completed successfully.")
 
-    def extract_playlist_covers_worker(self):
+    def extract_playlist_covers_worker(self, progress_callback=None, cancel_check=None):
         """Extract playlist covers without UI interactions (worker-safe)."""
         logging.info("Decompressing playlist cover textures.")
         error_covers = []
-        for tga_ckd in config.INPUT_COVERS_FOLDER.glob("*.tga.ckd"):
+        cover_files = list(config.INPUT_COVERS_FOLDER.glob("*.tga.ckd"))
+        total = len(cover_files)
+        for idx, tga_ckd in enumerate(cover_files, start=1):
+            if cancel_check and cancel_check():
+                logging.info("Cover extraction cancelled by user.")
+                return error_covers
+            if progress_callback:
+                progress_callback(idx, total, tga_ckd.stem)
             try:
                 logging.debug(f"Extracting cover from [{tga_ckd}]")
                 output_stem = tga_ckd.stem
                 if output_stem.endswith(".tga"):
                     output_stem = output_stem[:-4]
                 output_png = config.TEMP_PLAYLISTS_COVERS / f"{output_stem}.png"
-                playlist_covers.tga_ckd_to_png(tga_ckd, output_png)
+                playlist_covers.tga_ckd_to_png(tga_ckd, output_png, progress_callback=None)
                 logging.debug(f"Extracted and converted cover [{tga_ckd.name}] to PNG [{output_png}]")
             except Exception as e:
                 error_covers.append(tga_ckd.name)
@@ -197,13 +221,20 @@ class DataService:
         logging.info("Populating songs from extracted maps folders...")
         return self.load_songs_from_extracted_maps_folders()
 
-    def build_playlists_data(self, locales_dict, songs_dict):
+    def build_playlists_data(self, locales_dict, songs_dict, progress_callback=None):
         """Build playlists payload for UI rendering (data-only)."""
         sections_list = json.loads(config.INPUT_SECTIONS_FILE.read_text(encoding="utf-8"))["rules"]["/jd2022-playlists"]["categories"]
         playlists_list = json.loads(config.INPUT_PLAYLISTS_FILE.read_text(encoding="utf-8"))["playlists"]
 
         payload = []
-        for section in sections_list:
+        total_sections = len(sections_list)
+        for idx, section in enumerate(sections_list, start=1):
+            if progress_callback:
+                try:
+                    section_name = section.get("title", "") if isinstance(section, dict) else ""
+                    progress_callback(idx, total_sections, section_name)
+                except Exception:
+                    pass
             section_name = section["title"] if "title" in section else locales_dict.get(section["titleId"], "")
             section_payload = {
                 "title": section_name,
@@ -216,9 +247,7 @@ class DataService:
                 playlist_description_id = str(playlists_list[playlist["playlistID"]]["descriptionId"])
                 title_text = locales_dict.get(playlist_title_id, "")
                 description_text = locales_dict.get(playlist_description_id, "")
-                cover_png_path = self._resolve_cover_png_path(
-                    playlists_list[playlist["playlistID"]]["coverPath"]
-                )
+                cover_png_path = utils.resolve_cover_png_path(playlists_list[playlist["playlistID"]]["coverPath"])
 
                 playlist_data = {
                     "playlistID": playlist["playlistID"],
@@ -277,7 +306,7 @@ class DataService:
         output_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         logging.info(f"songs.json saved: {output_path}")
 
-    def load_songs_from_extracted_maps_folders(self):
+    def load_songs_from_extracted_maps_folders(self, progress_callback=None):
         """Load tblSongs by scanning extracted maps folders."""
         songs_list = []
         extracted_maps_dirs = [d for d in config.EXTRACTED_DIR.iterdir() if d.is_dir() and d.name.startswith("maps_")]
@@ -285,6 +314,7 @@ class DataService:
         total_folders_analyzed = 0
         error_folders = []
 
+        songdesc_paths = []
         for maps_dir in extracted_maps_dirs:
             cache_itf_path = maps_dir / "cache" / "itf_cooked" / "nx" / "world" / "maps"
             if not cache_itf_path.exists():
@@ -298,20 +328,29 @@ class DataService:
                 if not songdesc_ckd_path.exists():
                     continue
 
-                total_folders_analyzed += 1
+                songdesc_paths.append((maps_dir, songdesc_ckd_path))
 
+        total_candidates = len(songdesc_paths)
+        for idx, (maps_dir, songdesc_ckd_path) in enumerate(songdesc_paths, start=1):
+            total_folders_analyzed += 1
+            if progress_callback:
                 try:
-                    song_json, error_msg = self._parse_songdesc_file(songdesc_ckd_path)
-                    if error_msg:
-                        logging.error(error_msg, exc_info=True)
-                        error_folders.append(str(songdesc_ckd_path))
-                        continue
-                    if song_json:
-                        songs_list.append(self._build_song_entry(song_json, maps_dir, songdesc_ckd_path))
-                except Exception as e:
-                    error_msg = f"Error processing:\n{songdesc_ckd_path}\nError: {e}"
-                    logging.exception(error_msg)
+                    progress_callback(idx, total_candidates, songdesc_ckd_path.name)
+                except Exception:
+                    pass
+
+            try:
+                song_json, error_msg = self._parse_songdesc_file(songdesc_ckd_path)
+                if error_msg:
+                    logging.error(error_msg, exc_info=True)
                     error_folders.append(str(songdesc_ckd_path))
+                    continue
+                if song_json:
+                    songs_list.append(self._build_song_entry(song_json, maps_dir, songdesc_ckd_path))
+            except Exception as e:
+                error_msg = f"Error processing:\n{songdesc_ckd_path}\nError: {e}"
+                logging.exception(error_msg)
+                error_folders.append(str(songdesc_ckd_path))
 
         logging.info(f"Total folders analyzed: {total_folders_analyzed}")
         logging.info(f"Folders with errors: {len(error_folders)}")

@@ -52,6 +52,7 @@ class SongsTableController:
         """Filter tblSongs according to text typed in txtSearchSongs."""
         try:
             self.main.ui.tblSongs.clearSelection()
+            self.main.tblSongs_last_selected_row = None
 
             search_text = self.main.ui.txtSearchSongs.toPlainText().lower()
             filter_empty = not search_text

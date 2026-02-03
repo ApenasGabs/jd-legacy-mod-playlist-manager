@@ -28,12 +28,13 @@
 # - Updated usage instructions and help messages to reflect the new script name and available modes.
 # - Minor changes in string handling for legacy compatibility.
 # - Maintained all original decompress/compress logic for loc8 <-> JSON conversion.
+# - Adds optional progress_callback hooks for compress/decompress progress reporting.
 #
 ############################################################
 
 import json
 
-def decompress(input, output, legacy=False):
+def decompress(input, output, legacy=False, progress_callback=None):
     with open(input, "rb") as f:
         j = {}
         f.seek(8)
@@ -46,15 +47,22 @@ def decompress(input, output, legacy=False):
                 value = value.replace('"', '\\"')
             j[id] = value
             i = i + 1
+            if progress_callback:
+                try:
+                    progress_callback(i, amountOfStrings, id)
+                except Exception:
+                    pass
     with open(output, "w", encoding="utf-8") as f:
         json.dump(j, f, ensure_ascii=False, separators=(',', ':'))
 
-def compress(input, output, legacy=False):
+def compress(input, output, legacy=False, progress_callback=None):
     with open(output, "wb") as f:
         j = json.load(open(input, "r", encoding="utf-8"))
         f.write(b'\x00\x00\x00\x01\x00\x00\x00\x00')
         f.write(len(j).to_bytes(4, "big"))
-        for i in j:
+        keys = list(j.keys())
+        total = len(keys)
+        for idx, i in enumerate(keys, start=1):
             raw = str(j[i])
             if legacy:
                 raw = raw.replace('\\"', '"')
@@ -62,6 +70,11 @@ def compress(input, output, legacy=False):
             f.write(int(i).to_bytes(4, "big"))
             f.write(len(string).to_bytes(4, "big"))
             f.write(string)
+            if progress_callback:
+                try:
+                    progress_callback(idx, total, i)
+                except Exception:
+                    pass
         f.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF')
 
 if __name__ == "__main__":

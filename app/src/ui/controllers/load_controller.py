@@ -1,8 +1,9 @@
 import datetime
 import logging
 import shutil
+import time
 
-from PySide6.QtCore import QThread, Qt, QTimer
+from PySide6.QtCore import QThread, QTimer, QObject, Signal
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from ... import config
@@ -21,6 +22,12 @@ class LoadController:
         self._data_thread = None
         self._data_worker = None
         self.loading_screen = None
+        self._cancel_dialog = None
+        self._cancel_in_progress = False
+        self._cleanup_thread = None
+        self._cleanup_worker = None
+        self._last_load_percent = -1
+        self._last_load_message = None
 
     def begin(self):
         """Entry point for load flow."""
@@ -194,10 +201,13 @@ class LoadController:
 
     def start_data_load_thread(self, load_mode, clear_extracted):
         """Start background worker for extraction/data loading."""
+        self._last_load_percent = -1
+        self._last_load_message = None
         self.loading_screen = LoadingScreen(
             self.main,
             title_text=texts.LOADING_TITLE_LABEL,
             footer_text=texts.LOADING_FOOTER_TEXT,
+            cancel_callback=self._on_cancel_loading_requested,
         )
         self.loading_screen.show()
         QApplication.processEvents()
@@ -210,9 +220,11 @@ class LoadController:
         self._data_worker.progress.connect(self.on_data_load_progress)
         self._data_worker.finished.connect(self.on_data_loaded)
         self._data_worker.error.connect(self.on_data_load_error)
+        self._data_worker.cancelled.connect(self.on_data_load_cancelled)
 
         self._data_worker.finished.connect(self._data_thread.quit)
         self._data_worker.error.connect(self._data_thread.quit)
+        self._data_worker.cancelled.connect(self._data_thread.quit)
         self._data_thread.finished.connect(self._data_worker.deleteLater)
         self._data_thread.finished.connect(self._data_thread.deleteLater)
 
@@ -233,12 +245,33 @@ class LoadController:
     def _on_data_load_progress_ui(self, percent, message):
         try:
             if self.loading_screen:
+                percent = self._smooth_load_percent(percent, message)
                 self.loading_screen.set_progress(percent, message)
         except Exception:
             pass
 
+    def _smooth_load_percent(self, percent, message):
+        try:
+            percent = int(percent)
+        except Exception:
+            percent = 0
+        if percent < 0:
+            percent = 0
+        if percent > 100:
+            percent = 100
+        if percent < self._last_load_percent:
+            percent = self._last_load_percent
+        self._last_load_percent = percent
+        self._last_load_message = message
+        return percent
+
     def _on_data_loaded_ui(self, payload):
         """Handle background worker success on the UI thread."""
+        try:
+            if self._cancel_dialog and self._cancel_dialog.isVisible():
+                self._cancel_dialog.close()
+        except Exception:
+            pass
         self.prewarm_cover_pixmaps(payload)
         self.load_components(payload)
         cover_errors = payload.get("cover_errors") or []
@@ -257,6 +290,10 @@ class LoadController:
                 self.loading_screen.set_progress(100, texts.LOAD_PROGRESS_DONE)
             except Exception:
                 pass
+            try:
+                self.loading_screen.allow_close()
+            except Exception:
+                pass
             self.loading_screen.close()
         self.maybe_show_songs_json_info(payload)
 
@@ -268,8 +305,10 @@ class LoadController:
                 return
             if not self.loading_screen:
                 return
+            start, end = self._get_prewarm_progress_range()
+            span = max(end - start, 0)
             try:
-                self.loading_screen.set_progress(95, texts.LOAD_PROGRESS_PRELOAD_COVERS)
+                self.loading_screen.set_progress(start, texts.LOAD_PROGRESS_PRELOAD_COVERS)
             except Exception:
                 pass
             label = getattr(self.main.ui, "lblImg", None)
@@ -284,19 +323,47 @@ class LoadController:
             if not target_h:
                 target_h = 151
 
-            def _progress(idx, total):
+            def _progress(idx, total, path=None):
                 if self.loading_screen:
-                    pct = 95
+                    pct = start
                     if total:
-                        pct = 95 + int((idx / total) * 4)
-                        if pct > 99:
-                            pct = 99
-                    self.loading_screen.set_progress(pct, texts.LOAD_PROGRESS_PRELOAD_COVERS)
+                        pct = start + int((idx / total) * span)
+                        if pct > end:
+                            pct = end
+                    name = ""
+                    try:
+                        if path:
+                            from pathlib import Path
+                            name = Path(str(path)).name
+                    except Exception:
+                        name = ""
+                    message = texts.LOAD_PROGRESS_PRELOAD_COVERS
+                    if name and total:
+                        message = texts.LOAD_PROGRESS_PRELOAD_COVERS_ITEM_COUNT.format(
+                            idx=idx,
+                            total=total,
+                            name=name,
+                        )
+                    elif name:
+                        message = texts.LOAD_PROGRESS_PRELOAD_COVERS_ITEM.format(name=name)
+                    self.loading_screen.set_progress(pct, message)
                 QApplication.processEvents()
 
             prewarm_cover_cache(cover_paths, target_w, target_h, progress_callback=_progress)
         except Exception:
             pass
+
+    def _get_prewarm_progress_range(self):
+        try:
+            if self.main._load_mode == LoadMode.JSON:
+                return 90, 100
+            if self.main._load_mode == LoadMode.EXTRACTED:
+                return 90, 100
+            if self.main._load_mode == LoadMode.IPK:
+                return 98, 100
+        except Exception:
+            pass
+        return 90, 100
 
     def maybe_show_songs_json_info(self, payload):
         if self.main._load_mode != LoadMode.JSON:
@@ -327,12 +394,165 @@ class LoadController:
             pass
         QTimer.singleShot(0, self.main, lambda: self._on_data_load_error_ui(message))
 
+    def on_data_load_cancelled(self):
+        QTimer.singleShot(0, self.main, self._on_data_load_cancelled_ui)
+
     def _on_data_load_error_ui(self, message):
         """Handle background worker errors on the UI thread."""
+        try:
+            if self._cancel_dialog and self._cancel_dialog.isVisible():
+                self._cancel_dialog.close()
+        except Exception:
+            pass
         if self.loading_screen:
+            try:
+                self.loading_screen.allow_close()
+            except Exception:
+                pass
             self.loading_screen.close()
         show_error(self.main, texts.TITLE_ERROR, texts.LOAD_DATA_ERROR.format(error=message))
         raise SystemExit(1)
+
+    def _on_data_load_cancelled_ui(self):
+        try:
+            if self._cancel_dialog and self._cancel_dialog.isVisible():
+                self._cancel_dialog.close()
+        except Exception:
+            pass
+
+        if self.main._load_mode == LoadMode.IPK:
+            self._start_cancel_cleanup(
+                target_dir=config.EXTRACTED_DIR,
+                log_label=str(config.EXTRACTED_DIR),
+                done_callback=lambda: QTimer.singleShot(0, self.main, self.begin),
+            )
+        else:
+            if self.loading_screen:
+                try:
+                    self.loading_screen.allow_close()
+                    self.loading_screen.close()
+                except Exception:
+                    pass
+            self._cancel_in_progress = False
+            QTimer.singleShot(0, self.main, self.begin)
+
+    def _on_cancel_loading_requested(self):
+        try:
+            if self._cancel_dialog and self._cancel_dialog.isVisible():
+                return False
+            if self._cancel_in_progress:
+                return False
+            if not self._data_worker:
+                return False
+            msg = QMessageBox(self.main)
+            self._cancel_dialog = msg
+            msg.setIcon(QMessageBox.Warning)
+            msg.setWindowTitle(texts.LOADING_CANCEL_CONFIRM_TITLE)
+            msg.setText(texts.LOADING_CANCEL_CONFIRM_TEXT)
+            msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg.setDefaultButton(QMessageBox.No)
+            result = msg.exec()
+            if result != QMessageBox.Yes:
+                return False
+
+            if self.loading_screen:
+                self.loading_screen.set_cancel_enabled(False)
+                self.loading_screen.set_progress(
+                    self.loading_screen.progress_bar.value(),
+                    texts.LOADING_CANCELING_TEXT,
+                )
+            self._cancel_in_progress = True
+            self._data_worker.request_cancel()
+            return False
+        except Exception:
+            return False
+
+    def _start_cancel_cleanup(self, target_dir, log_label, done_callback):
+        try:
+            if self.loading_screen:
+                self.loading_screen.set_cancel_enabled(False)
+                self.loading_screen.append_log_line(
+                    self.loading_screen.progress_bar.value(),
+                    texts.LOADING_CANCELING_TEXT,
+                )
+            self._cleanup_thread = QThread(self.main)
+
+            class _CleanupWorker(QObject):
+                finished = Signal()
+                progress = Signal(int, int, str)
+
+                def __init__(self, svc, directory, label):
+                    super().__init__()
+                    self._svc = svc
+                    self._dir = directory
+                    self._label = label
+                    self.result = None
+
+                def run(self):
+                    try:
+                        last_emit = 0.0
+                        def _throttled_progress(idx, total, name):
+                            nonlocal last_emit
+                            now = time.monotonic()
+                            if idx == total or (idx % 100 == 0) or (now - last_emit) > 0.2:
+                                last_emit = now
+                                self.progress.emit(idx, total, name)
+                        self.result = self._svc.clear_directory_contents_worker(
+                            self._dir,
+                            self._label,
+                            progress_callback=_throttled_progress,
+                        )
+                    finally:
+                        self.finished.emit()
+
+            self._cleanup_worker = _CleanupWorker(self.main.data_service, target_dir, log_label)
+            self._cleanup_worker.moveToThread(self._cleanup_thread)
+            self._cleanup_thread.started.connect(self._cleanup_worker.run)
+
+            def _on_cleanup_progress(idx, total, name):
+                try:
+                    if self.loading_screen:
+                        msg = f"{texts.LOADING_CANCELING_TEXT} ({idx}/{total}): {name}"
+                        self.loading_screen.set_progress(self.loading_screen.progress_bar.value(), msg)
+                except Exception:
+                    pass
+
+            self._cleanup_worker.progress.connect(_on_cleanup_progress)
+
+            def _finish():
+                try:
+                    if self.loading_screen and getattr(self._cleanup_worker, "result", None):
+                        res = self._cleanup_worker.result or {}
+                        remaining = res.get("remaining", 0)
+                        failed = res.get("failed", 0)
+                        if remaining or failed:
+                            msg = f"{texts.LOADING_CANCELING_TEXT} - remaining: {remaining}, failed: {failed}"
+                            self.loading_screen.append_log_line(
+                                self.loading_screen.progress_bar.value(),
+                                msg,
+                            )
+                    if self.loading_screen:
+                        self.loading_screen.allow_close()
+                        self.loading_screen.close()
+                except Exception:
+                    pass
+                self._cancel_in_progress = False
+                if done_callback:
+                    done_callback()
+
+            self._cleanup_worker.finished.connect(_finish)
+            self._cleanup_worker.finished.connect(self._cleanup_thread.quit)
+            self._cleanup_thread.finished.connect(self._cleanup_worker.deleteLater)
+            self._cleanup_thread.finished.connect(self._cleanup_thread.deleteLater)
+            self._cleanup_thread.start()
+        except Exception:
+            try:
+                if self.loading_screen:
+                    self.loading_screen.allow_close()
+                    self.loading_screen.close()
+            except Exception:
+                pass
+            self._cancel_in_progress = False
 
     def load_components(self, payload):
         """Load data in screen components (Songs/Playlists/Locales)."""
@@ -402,72 +622,3 @@ class LoadController:
             logging.exception(f"Failed to create backup: {e}")
             show_error(self.main, texts.BACKUP_ERROR_TITLE, texts.BACKUP_ERROR_TEXT.format(error=e))
 
-    def extract_mod_files(self):
-        ipk_files = list(config.INPUT_MOD_ROOT_DIR.glob("*.ipk"))
-
-        if not ipk_files:
-            show_warning(self.main, texts.TITLE_WARNING, texts.NO_IPK_FILES_FOUND_SIMPLE)
-            logging.error("No .ipk files found in the selected MOD folder.")
-            raise SystemExit(1)
-
-        logging.info(f"Found {len(ipk_files)} .ipk files to extract.")
-        error_files = []
-        for ipk in ipk_files:
-            output_folder = config.EXTRACTED_DIR / ipk.stem
-            output_folder.mkdir(exist_ok=True)
-            logging.info(f"Extracting file [{ipk.name}] to folder [{output_folder}]")
-            try:
-                ipk_manager.extract(ipk, output_dir=output_folder)
-            except Exception as e:
-                error_files.append(ipk.name)
-                logging.exception(f"Error extracting:\n{ipk.name}\nError: {e}")
-            else:
-                logging.info(f"Successfully extracted [{ipk.name}].")
-            QApplication.processEvents()
-
-        if error_files:
-            logging.error(
-                "Errors occurred while extracting IPKs: %s",
-                ", ".join(error_files)
-            )
-            show_error(self.main, texts.TITLE_ERROR, texts.EXTRACT_IPK_ERRORS.format(errors="\n".join(error_files)))
-            raise SystemExit(1)
-
-        logging.info("IPK extraction completed successfully.")
-
-    def messagebox_load_or_extract(self):
-        msg = QMessageBox(self.main)
-        msg.setIcon(QMessageBox.Question)
-        msg.setWindowTitle(texts.TITLE_EXISTING_FILES)
-        msg.setText(texts.EXTRACTED_FOUND_TEXT)
-        logging.info("Extracted folders detected in 'extracted' directory.")
-        msg.setInformativeText(texts.EXTRACTED_FOUND_INFO)
-
-        btn_reextract = msg.addButton(texts.BUTTON_REEXTRACT_ALL, QMessageBox.DestructiveRole)
-        btn_load = msg.addButton(texts.BUTTON_LOAD_EXISTING, QMessageBox.AcceptRole)
-        msg.setDefaultButton(btn_load)
-
-        msg.exec()
-
-        return msg.clickedButton() == btn_reextract
-
-    def ensure_patch_nx_extracted(self):
-        """Extract patch_nx.ipk only if patch_nx folder is missing."""
-        try:
-            patch_folder = config.EXTRACTED_DIR / "patch_nx"
-            if patch_folder.exists():
-                return True
-
-            patch_ipk = config.get_patch_nx_path()
-            if not patch_ipk or not patch_ipk.exists():
-                show_error(self.main, texts.TITLE_ERROR, texts.PATCH_NX_NOT_FOUND)
-                return False
-
-            logging.info("Extracting patch_nx.ipk only...")
-            patch_folder.mkdir(parents=True, exist_ok=True)
-            ipk_manager.extract(patch_ipk, output_dir=patch_folder)
-            return True
-        except Exception as e:
-            logging.exception(f"Failed to extract patch_nx.ipk: {e}")
-            show_error(self.main, texts.TITLE_ERROR, texts.PATCH_NX_EXTRACT_FAILED.format(error=e))
-            return False

@@ -16,6 +16,8 @@
 # - Centralizes configuration and error handling.
 # - Uses pathlib for better portability.
 # - Removes code duplication and increases robustness.
+# - Adds optional progress_callback hooks for extract/pack progress reporting.
+# - Adds optional cancel_check hook to interrupt extraction early.
 #
 ############################################################
 
@@ -27,7 +29,6 @@ import zlib
 import lzma
 import json
 import math
-import re
 from pathlib import PureWindowsPath, Path
 
 # Define endianness as big endian
@@ -158,7 +159,7 @@ def crc(data):
 # EXTRACT FUNCTION
 # ============================================================================
 
-def extract(target_file, output_dir=None):
+def extract(target_file, output_dir=None, progress_callback=None, cancel_check=None):
     """
     Extract files from an IPK archive.
     
@@ -209,6 +210,8 @@ def extract(target_file, output_dir=None):
         base_offset = unpack(header['base_offset'])
 
         for k, v in enumerate(file_chunks):
+            if cancel_check and cancel_check():
+                raise RuntimeError("Extraction cancelled by user.")
             # File raw data
             offset = unpack(file_chunks[k]['offset']['value'])
             data_size = unpack(file_chunks[k]['size']['value'])
@@ -225,6 +228,12 @@ def extract(target_file, output_dir=None):
                 file_name = file_chunks[k]['file_name']['value'].decode()
 
             file.seek(offset + base_offset)
+
+            if progress_callback:
+                try:
+                    progress_callback(k + 1, num_files, file_name)
+                except Exception:
+                    pass
 
             # Make the sub directories
             file_path.mkdir(parents=True, exist_ok=True)
@@ -255,7 +264,7 @@ def extract(target_file, output_dir=None):
 # PACK FUNCTION
 # ============================================================================
 
-def pack(target_folder, output_ipk, config_data=None):
+def pack(target_folder, output_ipk, config_data=None, progress_callback=None):
     """
     Pack files from a folder into an IPK archive.
     
@@ -287,8 +296,13 @@ def pack(target_folder, output_ipk, config_data=None):
     offset = 0  # Initial offset value
     num_files = 0  # Initialize the count of files
 
+    all_files = []
     for root, _, files in os.walk(target_folder):
         for file_name in files:
+            all_files.append((root, file_name))
+    total_files = len(all_files)
+
+    for idx, (root, file_name) in enumerate(all_files, start=1):
             full_path = os.path.normpath(os.path.join(root, file_name))
             rel_path = os.path.normpath(os.path.relpath(root, target_folder))
             file_size = os.path.getsize(full_path)
@@ -313,6 +327,12 @@ def pack(target_folder, output_ipk, config_data=None):
                 file_name = tmp_path
                 rel_path = tmp_name
                 
+            if progress_callback:
+                try:
+                    progress_callback(idx, total_files, file_name)
+                except Exception:
+                    pass
+
             with open(full_path, 'rb') as file:
                 readedFile = file.read()
                 if any(file_name.endswith(substring) for substring in config_data.get('compress', [])):
