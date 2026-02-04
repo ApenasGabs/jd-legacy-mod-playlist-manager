@@ -361,7 +361,7 @@ A: No, it is only compatible with Just Dance 2022 Legacy MOD Switch Offline.
 A: No, mainly because I don't play other versions or consoles, but the code is open source for anyone who wants to add more features.
 
 **Q4: Will you update songs.json when the MOD creators add new songs?**  
-A: As long as I'm still playing, probably yes. But I can't guarantee it forever. Anyway, the file updates itself after running load mode 3. So if you don't want to or can't extract the files on your PC, you can ask someone to extract and send you the updated file with the new CodeNames, or, if you know the necessary data, you can manually add the records by editing the [songs.json](app/runtime/songs.json).
+A: As long as I'm still playing, probably yes. But I can't guarantee it forever. Anyway, the file updates itself after running load mode 3. So if you don't want to or can't extract the files on your PC, you can ask someone to extract and send you the updated [songs.json](app/runtime/songs.json) file with the new CodeNames, or, if you know the necessary data, you can manually add the records by editing the [songs.json](app/runtime/songs.json).
 
 **Q5: Why don’t the song’s audio and the coach’s video play together?**  
 A: Honestly, I don’t know. For some reason, these files are separated inside the MOD (probably because the game reads them this way), so it wouldn’t make sense for me to “merge the two” just to display them together in the Playlist Manager.
