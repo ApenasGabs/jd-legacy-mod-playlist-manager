@@ -33,6 +33,7 @@ BUTTON_LOAD_EXISTING = "Load Existing"
 
 # Placeholders
 PLACEHOLDER_SEARCH_ALL = "Search in all columns..."
+PLACEHOLDER_SEARCH_ALL_LINES = "Search in all lines..."
 
 # Media
 NO_MEDIA_SELECTED = "Please click on a song first."

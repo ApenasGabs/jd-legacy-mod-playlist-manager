@@ -264,7 +264,7 @@ class MainWindow(QMainWindow):
             self.ui.txtSearchLocales.setPlaceholderText(texts.PLACEHOLDER_SEARCH_ALL)
             self.ui.txtSearchLocales.textChanged.connect(self.locales_controller.filter_tblLocales)
         if hasattr(self.ui, "txtSearchPlaylists"):
-            self.ui.txtSearchPlaylists.setPlaceholderText(texts.PLACEHOLDER_SEARCH_ALL)
+            self.ui.txtSearchPlaylists.setPlaceholderText(texts.PLACEHOLDER_SEARCH_ALL_LINES)
             self.ui.txtSearchPlaylists.setAcceptDrops(True)
             if hasattr(self.ui.txtSearchPlaylists, "viewport"):
                 self.ui.txtSearchPlaylists.viewport().setAcceptDrops(True)

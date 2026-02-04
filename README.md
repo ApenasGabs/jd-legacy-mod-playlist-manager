@@ -5,16 +5,17 @@
 </h1>
 
 <p align="center">
-  <img src="app/resources/assets/default_cover.png" alt="Default Playlist Cover" width="400">
+   <img src="app/resources/assets/default_cover.png" alt="Default Playlist Cover" width="400">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
-  <img src="https://img.shields.io/badge/Python-3.10-blue.svg" alt="Python Version">
+   <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
+   <img src="https://img.shields.io/badge/Ubisoft-%23F5F5F5.svg?style=for-the-badge&logo=Ubisoft&logoColor=black" alt="Ubisoft">
+   <img src="https://img.shields.io/badge/Switch-E60012?style=for-the-badge&logo=nintendo-switch&logoColor=white" alt="Switch">
 </p>
 <p align="center">
-  <img src="https://img.shields.io/badge/Ubisoft-%23F5F5F5.svg?style=for-the-badge&logo=Ubisoft&logoColor=black" alt="Switch">
-  <img src="https://img.shields.io/badge/Switch-E60012?style=for-the-badge&logo=nintendo-switch&logoColor=white" alt="Switch">
+   <img src="https://img.shields.io/badge/Python-3.10-blue.svg" alt="Python Version">
+   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
 </p>
 
 <h3 align="center"> A GUI tool to manage, create, and organize playlists for the Legacy MOD Offline on Just Dance 2022 (Switch) by scanning and editing MOD files and locales.</h2>
@@ -23,7 +24,21 @@ This software is a dedicated manager for users of the **Just Dance 2022 Legacy M
 The tool scans the MOD's directory, extracts necessary data, and allows the user to manipulate sections and playlists without manual JSON editing.
 
 <p align="center">
-  <img src="docs/images/UI.jpg" alt="UI" width="1000">
+   <kbd>
+      <img src="docs/images/0_main_UI.jpg" alt="UI" width="1000">
+   </kbd>
+</p>
+
+<p align="center">
+   <kbd>
+      <img src="docs/images/0_main_UI_2.jpg" alt="UI" width="1000">
+   </kbd>
+</p>
+
+<p align="center">
+   <kbd>
+      <img src="docs/images/0_main_ingame.jpg" alt="In-game" width="1000">
+   </kbd>
 </p>
 
 ---
@@ -36,6 +51,7 @@ The tool scans the MOD's directory, extracts necessary data, and allows the user
 <h2 align="center">Table of Contents</h2>
 
 <p align="left" style="line-height: 1.2;">
+
 • <a href="#key-features">Key Features</a><br>
 • <a href="#quick-download--installation-for-users">Quick Download & Installation For Users</a><br>
 • <a href="#how-to-use">How to Use</a><br>
@@ -46,6 +62,7 @@ The tool scans the MOD's directory, extracts necessary data, and allows the user
 • <a href="#disclaimer">Disclaimer</a><br>
 • <a href="#credits">Credits</a><br>
 • <a href="#license">License</a>
+
 </p>
   </table>
 </div>
@@ -90,13 +107,19 @@ You can load the MOD files and song database in three different ways. Regardless
   <table style="border-collapse: collapse; border: none; border-spacing: 0; background-color: transparent;">
     <tr style="border: none; background-color: transparent;">
       <td style="border: none; vertical-align: middle; padding: 10px;">
-        <img src="docs/images/select_mod_folder.jpg" alt="Load Mode Selection" width="300">
+         <kbd>
+            <img src="docs/images/1_load_select_mod_folder.jpg" alt="Load Mode Selection" width="250">
+         </kbd>
       </td>
       <td style="border: none; vertical-align: middle; padding: 10px;">
-        <img src="docs/images/load.jpg" alt="Load Mode Selection" width="500">
+         <kbd>
+            <img src="docs/images/2_load_menu.jpg" alt="Load Mode Selection" width="500">
+         </kbd>
       </td>
       <td style="border: none; vertical-align: middle; padding: 10px;">
-        <img src="docs/images/loading.jpg" alt="Loading Message Box" width="200">
+         <kbd>
+            <img src="docs/images/3_load_loading.jpg" alt="Loading Message Box" width="400">
+         </kbd>
       </td>
     </tr>
   </table>
@@ -112,7 +135,9 @@ This is the most basic and fastest way to create your playlists. It was designed
 With this mode, you can create, edit, delete, and reorder sections, playlists, and songs. You can also view, edit, and add covers to your playlists. However, you cannot preview coach videos or listen to the audio of each song in the table. Additionally, if a new song is added to the MOD by the modders, the songs.json file will only be updated if a full extraction is performed.
 
 <p align="center">
-   <img src="docs/images/songs_database_info.jpg" alt="Load Mode Selection" width="300">
+   <kbd>
+      <img src="docs/images/4_load_songs_database_info.jpg" alt="Load Mode Selection" width="300">
+   </kbd>
 </p>
 
 ---
@@ -141,8 +166,12 @@ If new songs are added to the MOD, you will need to extract all the content agai
 You can create new sections or edit existing ones using the interface. Double-click or use the appropriate button to add, edit, or remove sections.
 
 <p align="center">
-   <img src="docs/images/new_section.jpg" alt="Load Mode Selection" width="400">
-   <img src="docs/images/edit_section.jpg" alt="Load Mode Selection" width="400">
+   <kbd>
+      <img src="docs/images/5_section_new.jpg" alt="Load Mode Selection" width="400">
+   </kbd>
+   <kbd>
+      <img src="docs/images/6_section_edit.jpg" alt="Load Mode Selection" width="400">
+   </kbd>
 </p>
 
 ---
@@ -153,8 +182,12 @@ Double-click or use the appropriate button to add, edit, or delete playlists.
 You can add or edit the covers of your playlists that will appear in the game; however, **only .png images with exact dimensions of 1024x512 are allowed**. If you don’t want to use a custom image, you can use the default cover as shown in the interface.
 
 <p align="center">
-   <img src="docs/images/new_playlist.jpg" alt="New Playlist Window" width="400">
-   <img src="docs/images/edit_playlist.jpg" alt="Edit Playlist Window" width="400">
+   <kbd>
+      <img src="docs/images/7_playlist_new.jpg" alt="New Playlist Window" width="400">
+   </kbd>
+   <kbd>
+      <img src="docs/images/8_playlist_edit.jpg" alt="Edit Playlist Window" width="400">
+   </kbd>
 </p>
 
 ---
@@ -163,7 +196,9 @@ You can add or edit the covers of your playlists that will appear in the game; h
 Sections, playlists, and songs can be deleted by selecting the rows and clicking the delete button or pressing the DEL key. Be careful, as this action cannot be undone. If you delete a section or a playlist, all content inside will be deleted as well.
 
 <p align="center">
-   <img src="docs/images/delete_section_playlist.jpg" alt="Delete Section/Playlist Message Box" width="300">
+   <kbd>
+      <img src="docs/images/9_delete_section_playlist.jpg" alt="Delete Section/Playlist Message Box" width="300">
+   </kbd>
 </p>
 
 ---
@@ -176,7 +211,9 @@ Use Ctrl or Shift to select multiple songs.
 **Only for load mode 2 or 3:** You can preview a song’s video (coach) by clicking on the row in the Songs table. You can listen to the audio by clicking the Play emoji (▶️) in the table.
 
 <p align="center">
-   <img src="docs/images/drag_and_drop_songs_playlist.jpg" alt="Adding Songs to Playlists" width="1000">
+   <kbd>
+      <img src="docs/images/10_add_songs_dd.jpg" alt="Adding Songs to Playlists" width="1000">
+   </kbd>
 </p>
 
 ---
@@ -186,8 +223,12 @@ Use Ctrl or Shift to select multiple songs.
 You can change the order of sections, playlists and songs by dragging them to the desired position. You can move an entire playlist from one section to another; the songs in that playlist will remain inside it. You can also move a song from one playlist to another.
 
 <p align="center">
-   <img src="docs/images/before_moving.jpg" alt="Before Reorder Songs in a Playlist" width="450">
-   <img src="docs/images/after_moving.jpg" alt="After Reorder Songs in a Playlist" width="450">
+   <kbd>
+      <img src="docs/images/11_reordering_before_moving.jpg" alt="Before Reorder Songs in a Playlist" width="450">
+   </kbd>
+   <kbd>
+      <img src="docs/images/12_reordering_after_moving.jpg" alt="After Reorder Songs in a Playlist" width="450">
+   </kbd>
 </p>
 
 ---
@@ -201,13 +242,19 @@ Some songs may have their CodeName not found in the songs table and will therefo
 **If this song does not appear in your game and your files are updated:** Then this is a CodeName that actually does not exist in the MOD files. The CodeName is case-sensitive, so by searching for a similar name in the Songs table, you might find the missing song (this is what the interface suggests). In any case, songs with invalid CodeNames do not cause the game to crash; the only thing that happens is that they will not appear. You can remove them or just leave them there.
 
 <p align="center">
-   <img src="docs/images/song_not_found_1.jpg" alt="Song Not Found" width="500">
+   <kbd>
+      <img src="docs/images/13_missing_songs_1.jpg" alt="Song Not Found" width="500">
+   </kbd>
 </p>
 <p align="center">
-   <img src="docs/images/song_not_found_2.jpg" alt="Song Not Found" width="900">
+   <kbd>
+      <img src="docs/images/13_missing_songs_2.jpg" alt="Song Not Found" width="900">
+   </kbd>
 </p>
 <p align="center">
-   <img src="docs/images/song_not_found_3.jpg" alt="Song Not Found" width="700">
+   <kbd>
+      <img src="docs/images/14_missing_songs_3.jpg" alt="Song Not Found" width="700">
+   </kbd>
 </p>
 
 ---
@@ -218,7 +265,9 @@ Section and playlist locales strings are created, removed, and updated automatic
 But, you can double-click any cell in the Locales table to manually edit a locale (not recommended unless you know what you're doing). IDs cannot be edited.
 
 <p align="center">
-   <img src="docs/images/edit_locale.jpg" alt="Edit Locale String" width="300">
+   <kbd>
+      <img src="docs/images/15_locale_edit.jpg" alt="Edit Locale String" width="300">
+   </kbd>
 </p>
 
 > [!CAUTION]
@@ -233,22 +282,56 @@ If you want it to read the localisation file of another language, go to `/runtim
 - You can navigate the section/playlist tree and the song table using your keyboard (↑ ↓ → ←).
 - Each table has a filter field that searches across **all columns.**
 - When the "Autoplay Video" checkbox is checked, the coach’s video will start automatically as you navigate through the rows of the songs table. If unchecked, the video will always remain paused. There are also other player settings available (like timeline and volume).
+- When you drag songs to a playlist, if any song is already in the playlist, there will be a warning with the option to add only the songs that haven’t been added yet.
+
+<p align="center">
+   <kbd>
+      <img src="docs/images/20_extra_duplicate_songs.jpg" alt="Order Song Table" width="700">
+   </kbd>
+</p>
+
 - Both the song and locale tables can be sorted (asc and desc) by clicking on the column headers.
 
 <p align="center">
-   <img src="docs/images/order_song_table.jpg" alt="Order Song Table" width="500">
+   <kbd>
+      <img src="docs/images/16_extra_sort_column.jpg" alt="Order Song Table" width="500">
+   </kbd>
 </p>
 
 - You can drag a song from a playlist to the song filter to quickly find its CodeName, or drag a section/playlist to the locale filter to find its locale.
 
 <p align="center">
-   <img src="docs/images/drag_and_drop_song_codename.jpg" alt="Drag and drop song to song filter" width="1000">
+   <kbd>
+      <img src="docs/images/17_extra_dd_section.jpg" alt="Drag and drop song to song filter" width="1000">
+   </kbd>
 </p>
 <p align="center">
-   <img src="docs/images/drag_and_drop_section_locale.jpg" alt="Drag and drop section to locale filter" width="1000">
+   <kbd>
+      <img src="docs/images/18_extra_dd_playlist.jpg" alt="Drag and drop section to locale filter" width="1000">
+   </kbd>
 </p>
 <p align="center">
-    <img src="docs/images/drag_and_drop_playlist_locale.jpg" alt="Drag and drop playlist to locale filter" width="1000">
+   <kbd>
+      <img src="docs/images/19_extra_dd_song.jpg" alt="Drag and drop playlist to locale filter" width="1000">
+   </kbd>
+</p>
+
+- You can drag sections, playlists and songs to the playlist filter to quickly find similars itens.
+
+<p align="center">
+   <kbd>
+      <img src="docs/images/17_extra_dd_section_2.jpg" alt="Drag and drop song to song filter" width="400">
+   </kbd>
+</p>
+<p align="center">
+   <kbd>
+      <img src="docs/images/18_extra_dd_playlist_2.jpg" alt="Drag and drop section to locale filter" width="400">
+   </kbd>
+</p>
+<p align="center">
+   <kbd>
+      <img src="docs/images/19_extra_dd_song_2.jpg" alt="Drag and drop playlist to locale filter" width="400">
+   </kbd>
 </p>
 
 ---
@@ -257,7 +340,9 @@ If you want it to read the localisation file of another language, go to `/runtim
 When you select a row in the section/playlist tree or the song table and press CTRL+I, a text box will appear showing all information for that row. This is useful for developers to debug or inspect data.
 
 <p align="center">
-   <img src="docs/images/developer_info_box.jpg" alt="Developer Info Box" width="700">
+   <kbd>
+      <img src="docs/images/21_extra_dev_info_box.jpg" alt="Developer Info Box" width="700">
+   </kbd>
 </p>
 
 ---
@@ -305,6 +390,7 @@ If you wish to run from source, clone the repository, install dependencies and r
 * **Project idea, [UI mockup](docs/images/UI_mockup.png), UI screens in Qt Designer for PySide6, and main logic for reading and saving MOD files:** Guasta
 * **Most of the code:** Generated with GitHub Copilot (GPT-5.2-Codex)
 * **Default playlist cover ([app/resources/assets/default_cover.png](app/resources/assets/default_cover.png)) and exe icon ([app/resources/gui/icon.jpg](app/resources/gui/icon.jpg))**: Generated by Grok AI
+* **Examples of playlist covers ([docs/ia_covers](docs/ia_covers))**: Generated by Gemini Nano Banana
 * **File extraction/conversion code adapted from:**
    * IPK files - [ubiart-archive-tools](https://github.com/PartyService/ubiart-archive-tools) by **PartyService**
    * Textures/covers images - [NX-UbiArt-Texture-Maker](https://github.com/RN-JK/NX-UbiArt-Texture-Maker) by **RN-JK**

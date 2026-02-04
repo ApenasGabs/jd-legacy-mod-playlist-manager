@@ -162,9 +162,9 @@
    <widget class="QSlider" name="sldTimeline">
     <property name="geometry">
      <rect>
-      <x>1190</x>
+      <x>1200</x>
       <y>720</y>
-      <width>211</width>
+      <width>201</width>
       <height>20</height>
      </rect>
     </property>
@@ -207,10 +207,10 @@
    <widget class="QLabel" name="lblTime">
     <property name="geometry">
      <rect>
-      <x>1090</x>
+      <x>1150</x>
       <y>720</y>
       <width>51</width>
-      <height>16</height>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">
@@ -223,7 +223,7 @@
    <widget class="QPushButton" name="btnPlay">
     <property name="geometry">
      <rect>
-      <x>1130</x>
+      <x>1100</x>
       <y>720</y>
       <width>51</width>
       <height>26</height>
