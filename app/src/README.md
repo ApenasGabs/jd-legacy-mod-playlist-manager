@@ -140,10 +140,10 @@ This project uses GitHub Actions and cx_Freeze to automate builds and releases w
 **How to install:**
 1. Download and extract the `JD2022LMPlaylistManager.zip` file from the corresponding Release.
 2. The folder structure should be:
-		- JD2022LMPlaylistManager/JD2022LMPlaylistManager.exe
-		- JD2022LMPlaylistManager/runtime/songs.json
-		- JD2022LMPlaylistManager/resources/
-		- JD2022LMPlaylistManager/src/
+	- JD2022LMPlaylistManager/JD2022LMPlaylistManager.exe
+	- JD2022LMPlaylistManager/runtime/songs.json
+	- JD2022LMPlaylistManager/resources/
+	- JD2022LMPlaylistManager/src/
 3. Run `JD2022LMPlaylistManager.exe`.
 
 ### Manual Build (Local)
