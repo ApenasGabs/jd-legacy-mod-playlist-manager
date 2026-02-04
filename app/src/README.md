@@ -120,17 +120,17 @@ This project uses GitHub Actions and cx_Freeze to automate builds and releases w
 	```
 
 3. GitHub Actions will automatically:
-		- Install Python 3.10 and all dependencies (including cx_Freeze, zstandard, pyside6).
-		- Build the application using cx_Freeze, placing all required files and folders in the root of the release folder.
-		- Ensure the `runtime/songs.json` file is present in the correct location.
-		- Package everything into `JD2022LMPlaylistManager.zip` with the following structure:
-			- JD2022LMPlaylistManager/JD2022LMPlaylistManager.exe
-			- JD2022LMPlaylistManager/runtime/songs.json
-			- JD2022LMPlaylistManager/resources/
-			- JD2022LMPlaylistManager/src/
-			- (other required files/folders)
-		- Generate the SHA-256 hash of the ZIP and attach it to the release.
-		- Publish a new GitHub Release with the ZIP and the hash for verification.
+- Install Python 3.10 and all dependencies (including cx_Freeze, zstandard, pyside6).
+- Build the application using cx_Freeze, placing all required files and folders in the root of the release folder.
+- Ensure the `runtime/songs.json` file is present in the correct location.
+- Package everything into `JD2022LMPlaylistManager.zip` with the following structure:
+	- JD2022LMPlaylistManager/JD2022LMPlaylistManager.exe
+	- JD2022LMPlaylistManager/runtime/songs.json
+	- JD2022LMPlaylistManager/resources/
+	- JD2022LMPlaylistManager/src/
+	- (other required files/folders)
+- Generate the SHA-256 hash of the ZIP and attach it to the release.
+- Publish a new GitHub Release with the ZIP and the hash for verification.
 
 **What is included in the release:**
 - `JD2022LMPlaylistManager.exe` (main executable, at the root of the folder)
