@@ -384,7 +384,7 @@ class PlaylistsTreeController:
         walk(root)
         return items
 
-    def filter_tree_playlists(self):
+    def filter_tree_playlists(self, preserve_expansion=False):
         """Filter treePlaylists based on txtSearchPlaylists input."""
         try:
             if not hasattr(self.main_window.ui, "txtSearchPlaylists"):
@@ -407,13 +407,15 @@ class PlaylistsTreeController:
 
                 if filter_empty:
                     section_item.setHidden(False)
-                    section_item.setExpanded(True)
+                    if not preserve_expansion:
+                        section_item.setExpanded(True)
                     for j in range(section_item.childCount()):
                         playlist_item = section_item.child(j)
                         if not playlist_item:
                             continue
                         playlist_item.setHidden(False)
-                        playlist_item.setExpanded(False)
+                        if not preserve_expansion:
+                            playlist_item.setExpanded(False)
                         for k in range(playlist_item.childCount()):
                             song_item = playlist_item.child(k)
                             if song_item:
@@ -786,7 +788,7 @@ class PlaylistsTreeController:
             self.main_window.ui.treePlaylists.viewport().update()
             self.main_window.update_action_buttons()
             self.update_loaded_playlists_count()
-            self.filter_tree_playlists()
+            self.filter_tree_playlists(preserve_expansion=True)
             self.update_selected_count()
 
             logging.info(f"Deleted {len(root_items)} item(s) from playlists tree")

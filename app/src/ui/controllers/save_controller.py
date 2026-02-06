@@ -4,6 +4,7 @@ import re
 
 from PySide6.QtCore import QThread, QTimer, QObject, Signal
 from PySide6.QtWidgets import QApplication, QMessageBox
+from shiboken6 import isValid
 
 from ... import config
 from ...services.save_service import SaveService
@@ -26,10 +27,19 @@ class SaveController:
         self._last_save_percent = -1
         self._last_save_message = None
 
+    def _is_qobject_valid(self, obj):
+        return obj is not None and isValid(obj)
+
+    def _clear_save_refs(self):
+        self._save_thread = None
+        self._save_worker = None
+
     def on_btnSave_clicked(self):
         """Handle Save button on main window."""
         try:
-            if self._save_thread and self._save_thread.isRunning():
+            if not self._is_qobject_valid(self._save_thread):
+                self._clear_save_refs()
+            if self._is_qobject_valid(self._save_thread) and self._save_thread.isRunning():
                 return
             msg = QMessageBox(self.main)
             msg.setIcon(QMessageBox.Question)
@@ -183,6 +193,8 @@ class SaveController:
                         os.startfile(str(output_dir))
         except Exception as e:
             logging.exception(f"Error finalizing save: {e}")
+        finally:
+            self._clear_save_refs()
 
     def _on_save_error(self, message):
         """Handle save worker errors on UI thread."""
@@ -209,6 +221,8 @@ class SaveController:
             msg.exec()
         except Exception as e:
             logging.exception(f"Error handling save error: {e}")
+        finally:
+            self._clear_save_refs()
 
     def _on_save_cancelled(self):
         QTimer.singleShot(0, self.main, self._on_save_cancelled_ui)
@@ -224,6 +238,7 @@ class SaveController:
             log_label="data/output",
             done_callback=None,
         )
+        self._clear_save_refs()
 
     def _on_cancel_save_requested(self):
         try:
@@ -231,7 +246,7 @@ class SaveController:
                 return False
             if self._cancel_in_progress:
                 return False
-            if not self._save_worker:
+            if not self._is_qobject_valid(self._save_worker):
                 return False
             msg = QMessageBox(self.main)
             self._cancel_dialog = msg
