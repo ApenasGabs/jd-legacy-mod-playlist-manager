@@ -361,6 +361,8 @@ class MainWindow(QMainWindow):
             self.ui.btnSelectAllPlaylists.setEnabled(True)
         if hasattr(self.ui, "btnClearSelectedPlaylists"):
             self.ui.btnClearSelectedPlaylists.clicked.connect(self.playlists_tree_controller.on_btnClearSelectedPlaylists_clicked)
+        if hasattr(self.ui, "btnOrder"):
+            self.ui.btnOrder.clicked.connect(self.playlists_tree_controller.on_btnOrder_clicked)
         if hasattr(self.ui, "btnSave"):
             self.ui.btnSave.clicked.connect(self.save_controller.on_btnSave_clicked)
         self.update_action_buttons()

@@ -259,6 +259,14 @@ SECTION_TITLE_NEW = "New Section"
 
 TREE_DELETE_ERROR = "Error deleting item(s): {error}"
 
+# Playlist ordering
+ORDER_SELECT_PLAYLIST = "Please select a playlist to order."
+ORDER_SELECT_PLAYLISTS_ONLY = "Please select only playlist items to order."
+ORDER_PLAYLIST_PROMPT = "How would you like to order the songs in this playlist?"
+ORDER_PLAYLIST_BY_TITLE = "Order by song name"
+ORDER_PLAYLIST_BY_ARTIST = "Order by artist"
+ORDER_PLAYLIST_ERROR = "Error ordering playlist: {error}"
+
 FATAL_ERROR_TEXT = "An unexpected error occurred:\n{error}"
 
 DATA_PATCH_NX_NOT_FOUND = "patch_nx.ipk was not found in the selected MOD folder."

@@ -548,6 +548,70 @@ class PlaylistsTreeController:
         except Exception as e:
             logging.exception(f"Error clearing playlists selection: {e}")
 
+    def on_btnOrder_clicked(self):
+        """Order songs inside the selected playlist."""
+        try:
+            items = self._get_tree_selected_items()
+            if not items:
+                QMessageBox.information(self.main_window, texts.TITLE_INFO, texts.ORDER_SELECT_PLAYLIST)
+                return
+
+            if any(item.data(0, TREE_ITEM_TYPE_ROLE) != TreeItemType.PLAYLIST.value for item in items):
+                QMessageBox.information(self.main_window, texts.TITLE_INFO, texts.ORDER_SELECT_PLAYLISTS_ONLY)
+                return
+
+            msg = QMessageBox(self.main_window)
+            msg.setIcon(QMessageBox.Question)
+            msg.setWindowTitle(texts.TITLE_CONFIRMATION)
+            msg.setText(texts.ORDER_PLAYLIST_PROMPT)
+            btn_title = msg.addButton(texts.ORDER_PLAYLIST_BY_TITLE, QMessageBox.AcceptRole)
+            btn_artist = msg.addButton(texts.ORDER_PLAYLIST_BY_ARTIST, QMessageBox.AcceptRole)
+            btn_cancel = msg.addButton(texts.BUTTON_CANCEL, QMessageBox.RejectRole)
+            msg.setDefaultButton(btn_title)
+            msg.exec()
+
+            clicked = msg.clickedButton()
+            if clicked == btn_cancel:
+                return
+
+            order_mode = "title" if clicked == btn_title else "artist"
+            for item in items:
+                self._order_playlist_songs(item, order_mode)
+        except Exception as e:
+            logging.exception(f"Error ordering playlist: {e}")
+            QMessageBox.critical(self.main_window, texts.TITLE_ERROR, texts.ORDER_PLAYLIST_ERROR.format(error=e))
+
+    def _order_playlist_songs(self, playlist_item, order_mode):
+        """Reorder playlist songs in the tree and update stored maps order."""
+        if not playlist_item or playlist_item.data(0, TREE_ITEM_TYPE_ROLE) != TreeItemType.PLAYLIST.value:
+            return
+
+        expanded = playlist_item.isExpanded()
+        songs = []
+        while playlist_item.childCount() > 0:
+            songs.append(playlist_item.takeChild(0))
+
+        def _normalize(value):
+            return str(value or "").strip().casefold()
+
+        def _song_key(song_item):
+            song_data = song_item.data(0, Qt.UserRole) or {}
+            title = _normalize(song_data.get("Title"))
+            artist = _normalize(song_data.get("Artist"))
+            song_code = _normalize(song_item.data(0, SONG_CODE_ROLE))
+            if order_mode == "artist":
+                return (artist, title, song_code)
+            return (title, artist, song_code)
+
+        songs.sort(key=_song_key)
+        for child in songs:
+            playlist_item.addChild(child)
+
+        playlist_item.setExpanded(expanded)
+        self._rebuild_playlist_songs(playlist_item)
+        self.apply_current_filter()
+        self.update_selected_count()
+
     def apply_current_filter(self):
         try:
             if not hasattr(self.main_window.ui, "txtSearchPlaylists"):

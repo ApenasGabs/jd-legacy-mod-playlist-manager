@@ -218,7 +218,7 @@ Use Ctrl or Shift to select multiple songs.
 
 ---
 
-### Reordering Sections, Playlists and Songs
+### Reordering Sections, Playlists, and Songs
 
 You can change the order of sections, playlists and songs by dragging them to the desired position. You can move an entire playlist from one section to another; the songs in that playlist will remain inside it. You can also move a song from one playlist to another.
 
@@ -228,6 +228,19 @@ You can change the order of sections, playlists and songs by dragging them to th
    </kbd>
    <kbd>
       <img src="docs/images/12_reordering_after_moving.jpg" alt="After Reorder Songs in a Playlist" width="450">
+   </kbd>
+</p>
+
+Use the Order button to sort songs inside playlists automatically. Select one or more playlists in the tree (only playlist items are allowed), click Order, and choose how you want to sort:
+
+- Order by song name (tie-breaker: artist name)
+- Order by artist name (tie-breaker: song name)
+
+The new order is applied visually in the tree and saved to the playlist data.
+
+<p align="center">
+   <kbd>
+      <img src="docs/images/12.1_btn_order.jpg" alt="After Reorder Songs in a Playlist" width="700">
    </kbd>
 </p>
 

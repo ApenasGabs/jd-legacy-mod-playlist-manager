@@ -236,7 +236,7 @@
    <widget class="QPushButton" name="btnAddSection">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>250</x>
       <y>760</y>
       <width>81</width>
       <height>26</height>
@@ -249,9 +249,9 @@
    <widget class="QPushButton" name="btnEdit">
     <property name="geometry">
      <rect>
-      <x>400</x>
+      <x>410</x>
       <y>760</y>
-      <width>81</width>
+      <width>51</width>
       <height>26</height>
      </rect>
     </property>
@@ -262,9 +262,9 @@
    <widget class="QPushButton" name="btnDelete">
     <property name="geometry">
      <rect>
-      <x>480</x>
+      <x>460</x>
       <y>760</y>
-      <width>81</width>
+      <width>51</width>
       <height>26</height>
      </rect>
     </property>
@@ -325,7 +325,7 @@
    <widget class="QPushButton" name="btnAddPlaylist">
     <property name="geometry">
      <rect>
-      <x>320</x>
+      <x>330</x>
       <y>760</y>
       <width>81</width>
       <height>26</height>
@@ -617,6 +617,19 @@
     </property>
     <property name="alignment">
      <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnOrder">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>760</y>
+      <width>51</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Order</string>
     </property>
    </widget>
   </widget>
