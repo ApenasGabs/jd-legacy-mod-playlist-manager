@@ -4,7 +4,18 @@ from collections import OrderedDict
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QBrush, QColor, QFont, QPixmap, QTextCursor
-from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QTreeWidgetItem
+from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QTreeWidgetItem,
+    QVBoxLayout,
+)
 
 from ... import config
 from ..shared.constants import (
@@ -22,6 +33,7 @@ from ..shared.constants import (
 )
 from ..utils.utils import set_label_pixmap
 from ..shared import texts
+from ...core.enums import LoadMode
 
 
 class PlaylistsTreeController:
@@ -228,6 +240,11 @@ class PlaylistsTreeController:
                 full_message = item.data(0, MISSING_SONG_MESSAGE_ROLE)
                 missing_code = item.data(0, MISSING_SONG_CODE_ROLE)
                 if full_message and not getattr(self.main_window, "suppress_missing_song_message", False):
+                    if hasattr(self.main_window, "media_controller"):
+                        self.main_window.media_controller.reset_media_player(for_video=False)
+                        self.main_window.media_controller.clear_video_output()
+                    self.main_window.ui.lblImg.setPixmap(QPixmap())
+                    self.main_window.ui.lblImg.setText("")
                     msg = QMessageBox(self.main_window)
                     msg.setIcon(QMessageBox.Information)
                     msg.setWindowTitle(texts.SONG_NOT_FOUND_TITLE)
@@ -247,9 +264,22 @@ class PlaylistsTreeController:
                     if checkbox.isChecked():
                         self.main_window.suppress_missing_song_message = True
 
+            load_mode = getattr(self.main_window, "_load_mode", None)
+            should_preview_song_video = (
+                item_type == TreeItemType.SONG.value
+                and load_mode in (LoadMode.EXTRACTED, LoadMode.IPK)
+            )
+
             if not getattr(self.main_window, "media_enabled", True):
                 self.main_window.ui.lblImg.setPixmap(QPixmap())
                 self.main_window.ui.lblImg.setText("")
+                return
+
+            if should_preview_song_video:
+                song_data = item.data(0, Qt.UserRole) or {}
+                self._last_cover_path = ""
+                if hasattr(self.main_window, "media_controller"):
+                    self.main_window.media_controller.load_video_for_song_data(song_data)
                 return
 
             cover_item = None
@@ -562,28 +592,62 @@ class PlaylistsTreeController:
                 QMessageBox.information(self.main_window, texts.TITLE_INFO, texts.ORDER_SELECT_PLAYLISTS_ONLY)
                 return
 
-            msg = QMessageBox(self.main_window)
-            msg.setIcon(QMessageBox.Question)
-            msg.setWindowTitle(texts.TITLE_CONFIRMATION)
-            msg.setText(texts.ORDER_PLAYLIST_PROMPT)
-            btn_title = msg.addButton(texts.ORDER_PLAYLIST_BY_TITLE, QMessageBox.AcceptRole)
-            btn_artist = msg.addButton(texts.ORDER_PLAYLIST_BY_ARTIST, QMessageBox.AcceptRole)
-            btn_cancel = msg.addButton(texts.BUTTON_CANCEL, QMessageBox.RejectRole)
-            msg.setDefaultButton(btn_title)
-            msg.exec()
-
-            clicked = msg.clickedButton()
-            if clicked == btn_cancel:
+            order_mode, ascending = self._prompt_order_options()
+            if not order_mode:
                 return
-
-            order_mode = "title" if clicked == btn_title else "artist"
             for item in items:
-                self._order_playlist_songs(item, order_mode)
+                self._order_playlist_songs(item, order_mode, ascending)
         except Exception as e:
             logging.exception(f"Error ordering playlist: {e}")
             QMessageBox.critical(self.main_window, texts.TITLE_ERROR, texts.ORDER_PLAYLIST_ERROR.format(error=e))
 
-    def _order_playlist_songs(self, playlist_item, order_mode):
+    def _prompt_order_options(self):
+        dialog = QDialog(self.main_window)
+        dialog.setWindowTitle(texts.TITLE_CONFIRMATION)
+
+        layout = QVBoxLayout(dialog)
+        prompt = QLabel(texts.ORDER_PLAYLIST_PROMPT)
+        layout.addWidget(prompt)
+
+        direction_label = QLabel(texts.ORDER_PLAYLIST_DIRECTION_LABEL)
+        layout.addWidget(direction_label)
+
+        radio_layout = QHBoxLayout()
+        radio_asc = QRadioButton(texts.ORDER_PLAYLIST_ASCENDING)
+        radio_desc = QRadioButton(texts.ORDER_PLAYLIST_DESCENDING)
+        radio_asc.setChecked(True)
+        radio_layout.addWidget(radio_asc)
+        radio_layout.addWidget(radio_desc)
+        radio_layout.addStretch(1)
+        layout.addLayout(radio_layout)
+
+        button_layout = QHBoxLayout()
+        btn_title = QPushButton(texts.ORDER_PLAYLIST_BY_TITLE)
+        btn_artist = QPushButton(texts.ORDER_PLAYLIST_BY_ARTIST)
+        btn_cancel = QPushButton(texts.BUTTON_CANCEL)
+        button_layout.addWidget(btn_title)
+        button_layout.addWidget(btn_artist)
+        button_layout.addWidget(btn_cancel)
+        layout.addLayout(button_layout)
+
+        result = {"mode": None}
+
+        def _accept(mode):
+            result["mode"] = mode
+            dialog.accept()
+
+        btn_title.clicked.connect(lambda: _accept("title"))
+        btn_artist.clicked.connect(lambda: _accept("artist"))
+        btn_cancel.clicked.connect(dialog.reject)
+
+        dialog.exec()
+
+        if result["mode"] is None:
+            return None, True
+
+        return result["mode"], radio_asc.isChecked()
+
+    def _order_playlist_songs(self, playlist_item, order_mode, ascending=True):
         """Reorder playlist songs in the tree and update stored maps order."""
         if not playlist_item or playlist_item.data(0, TREE_ITEM_TYPE_ROLE) != TreeItemType.PLAYLIST.value:
             return
@@ -605,7 +669,7 @@ class PlaylistsTreeController:
                 return (artist, title, song_code)
             return (title, artist, song_code)
 
-        songs.sort(key=_song_key)
+        songs.sort(key=_song_key, reverse=not ascending)
         for child in songs:
             playlist_item.addChild(child)
 

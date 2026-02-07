@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt, QUrl, QTimer
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import QVBoxLayout, QTableWidgetItem
+from PySide6.QtGui import QFontMetrics
 
 from ..shared import texts
 from ..shared.dialogs import show_info, show_error
@@ -128,17 +129,52 @@ class MediaController:
         except Exception as e:
             logging.exception(f"Error resetting media player: {e}")
 
-    def wrap_text(self, text, width=65):
+    def wrap_text(self, text, width=None):
         """Break long text into multiple lines for label visibility"""
         if not text:
             return ""
         text = str(text)
+
+        if width is None:
+            try:
+                label = getattr(self.main.ui, "lblImg", None)
+                if label:
+                    metrics = QFontMetrics(label.font())
+                    pixel_width = max(label.contentsRect().width() - 4, 0)
+                    if pixel_width > 0:
+                        return self._wrap_text_by_pixels(text, metrics, pixel_width)
+            except Exception as e:
+                logging.exception(f"Failed to compute wrap width: {e}")
+
+        if width is None:
+            width = 65
         lines = []
         while len(text) > width:
             lines.append(text[:width])
             text = text[width:]
         if text:
             lines.append(text)
+        return "\n".join(lines)
+
+    def _wrap_text_by_pixels(self, text, metrics, max_width):
+        lines = []
+        for part in text.splitlines() or [""]:
+            line = ""
+            last_break = -1
+            for ch in part:
+                line += ch
+                if ch in ("\\", "/", " "):
+                    last_break = len(line)
+                if metrics.horizontalAdvance(line) > max_width:
+                    if last_break > 0:
+                        lines.append(line[:last_break].rstrip())
+                        line = line[last_break:]
+                    else:
+                        lines.append(line[:-1])
+                        line = ch
+                    last_break = -1
+            if line:
+                lines.append(line)
         return "\n".join(lines)
 
     def _is_playback_allowed(self):
@@ -580,7 +616,8 @@ class MediaController:
             self.set_playback_controls_enabled(True)
 
             # Show path in label with wrapping
-            formatted_path = self.wrap_text(found_path)
+            display_path = self._trim_runtime_path(found_path)
+            formatted_path = self.wrap_text(display_path)
             self.main.ui.lblImg.setWordWrap(True)
             self.main.ui.lblImg.setText(texts.MEDIA_AUDIO_PATH_LABEL.format(path=formatted_path))
 
@@ -605,6 +642,21 @@ class MediaController:
         except Exception as e:
             logging.exception(f"Error starting audio playback: {e}")
             self.main.ui.lblImg.setText(self.wrap_text(texts.PLAYBACK_ERROR_AUDIO_LABEL.format(error=e)))
+
+    def _trim_runtime_path(self, path_str):
+        """Shorten paths to start at the runtime folder when possible."""
+        if not path_str:
+            return ""
+        raw = str(path_str)
+        lowered = raw.lower()
+        marker = "\\runtime\\"
+        idx = lowered.find(marker)
+        if idx == -1:
+            marker = "/runtime/"
+            idx = lowered.find(marker)
+        if idx != -1:
+            return raw[idx + 1:]
+        return raw
 
     def queue_audio_play(self, found_path, song_data):
         """Queue audio playback to debounce rapid clicks."""
@@ -669,8 +721,10 @@ class MediaController:
                 failed_paths.append(candidate)
 
             if not found_path:
-                error_lines = [texts.MEDIA_AUDIO_FILE_NOT_FOUND] + [self.wrap_text(p) for p in failed_paths]
-                error_text = "\n".join(error_lines)
+                error_lines = [texts.MEDIA_AUDIO_FILE_NOT_FOUND] + [
+                    self.wrap_text(self._trim_runtime_path(p)) for p in failed_paths
+                ]
+                error_text = "\n\n".join(error_lines)
                 self.main.ui.lblImg.setText(error_text)
                 logging.error(error_text)
                 self.set_playback_controls_enabled(False)
@@ -696,11 +750,26 @@ class MediaController:
             if not song_data:
                 return
 
+            self.load_video_for_song_data(song_data)
+
+        except Exception as e:
+            logging.exception(f"Error loading video: {e}")
+            self.main.ui.lblImg.setText(self.wrap_text(texts.PLAYBACK_ERROR_VIDEO_LABEL.format(error=e)))
+
+    def load_video_for_song_data(self, song_data):
+        """Load (and optionally autoplay) the video for the given song data."""
+        try:
+            if not self._is_playback_allowed():
+                return
+            if not song_data:
+                return
+
             video_path = song_data.get("VideoFilePath", "")
             self.main.ui.lblImg.setText("")  # Clear image label for video load
 
             if not video_path or not Path(video_path).exists():
-                error_text = self.wrap_text(texts.MEDIA_VIDEO_NOT_FOUND.format(path=video_path))
+                display_path = self._trim_runtime_path(video_path)
+                error_text = self.wrap_text(texts.MEDIA_VIDEO_NOT_FOUND.format(path=display_path))
                 self.main.ui.lblImg.setText(error_text)
                 logging.error(error_text)
                 self.set_playback_controls_enabled(False)

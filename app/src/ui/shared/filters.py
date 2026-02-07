@@ -6,6 +6,7 @@ from PySide6.QtGui import QFont, QTextCursor
 
 from .constants import (
     TREE_ITEM_TYPE_ROLE,
+    MISSING_SONG_MESSAGE_ROLE,
     MISSING_SONG_CODE_ROLE,
     SONG_CODE_ROLE,
     PLAYLIST_ID_ROLE,
@@ -134,6 +135,8 @@ class PlaylistsTreeDropFilter(QObject):
             if self._is_external_tblsongs_drop(event):
                 if not self._handle_tblsongs_drop(event):
                     event.ignore()
+                return True
+            if self._handle_internal_song_transfer(event):
                 return True
             if not self._is_valid_drop(event):
                 event.ignore()
@@ -271,6 +274,170 @@ class PlaylistsTreeDropFilter(QObject):
         event.setDropAction(Qt.CopyAction)
         event.accept()
         self._rebuild_playlist_songs(intended_parent)
+        return True
+
+    def _is_internal_tree_source(self, event):
+        try:
+            return event.source() in (self.tree, self.tree.viewport())
+        except Exception as e:
+            logging.exception(f"Failed to inspect drop event source: {e}")
+            return False
+
+    def _get_song_code_for_item(self, item):
+        if not item:
+            return ""
+        code = item.data(0, SONG_CODE_ROLE)
+        if code:
+            return str(code)
+        missing_code = item.data(0, MISSING_SONG_CODE_ROLE)
+        if missing_code:
+            return str(missing_code)
+        text = item.text(0) or ""
+        return text.split(":", 1)[0].strip()
+
+    def _clone_song_item(self, source_item):
+        song_code = self._get_song_code_for_item(source_item)
+        song_data = source_item.data(0, Qt.UserRole) or {}
+        item = QTreeWidgetItem()
+        item.setText(0, source_item.text(0))
+        item.setData(0, SONG_CODE_ROLE, song_code)
+        item.setData(0, Qt.UserRole, song_data)
+        item.setData(0, TREE_ITEM_TYPE_ROLE, TreeItemType.SONG.value)
+        missing_message = source_item.data(0, MISSING_SONG_MESSAGE_ROLE)
+        missing_code = source_item.data(0, MISSING_SONG_CODE_ROLE)
+        if missing_message:
+            item.setBackground(0, source_item.background(0))
+            item.setForeground(0, source_item.foreground(0))
+            item.setData(0, MISSING_SONG_MESSAGE_ROLE, missing_message)
+            if missing_code:
+                item.setData(0, MISSING_SONG_CODE_ROLE, missing_code)
+        song_font = QFont()
+        song_font.setPointSize(10)
+        item.setFont(0, song_font)
+        item.setFlags((item.flags() | Qt.ItemIsDragEnabled) & ~Qt.ItemIsDropEnabled)
+        return item
+
+    def _handle_internal_song_transfer(self, event):
+        if not self._is_internal_tree_source(event):
+            return False
+
+        selected = self.tree.selectedItems()
+        if not selected:
+            current = self.tree.currentItem()
+            selected = [current] if current else []
+        if not selected:
+            return False
+
+        src_type = self._get_item_type(selected[0])
+        if src_type != TreeItemType.SONG.value:
+            return False
+
+        if any(self._get_item_type(it) != TreeItemType.SONG.value for it in selected):
+            return False
+
+        parents = {item.parent() for item in selected}
+        if len(parents) != 1:
+            return False
+
+        source_parent = selected[0].parent()
+        intended_parent = self._get_intended_parent(event)
+        if self._get_item_type(intended_parent) != TreeItemType.PLAYLIST.value:
+            return False
+
+        if intended_parent == source_parent:
+            return False
+
+        ordered_items = sorted(selected, key=lambda item: source_parent.indexOfChild(item))
+
+        action = "move"
+        msg = QMessageBox(self.tree)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle(texts.SONGS_MOVE_COPY_TITLE)
+        msg.setText(texts.SONGS_MOVE_COPY_TEXT.format(count=len(ordered_items)))
+        btn_move = msg.addButton(texts.SONGS_MOVE_COPY_MOVE, QMessageBox.AcceptRole)
+        btn_copy = msg.addButton(texts.SONGS_MOVE_COPY_COPY, QMessageBox.ActionRole)
+        btn_cancel = msg.addButton(texts.BUTTON_CANCEL, QMessageBox.RejectRole)
+        msg.setDefaultButton(btn_move)
+        msg.exec()
+        clicked = msg.clickedButton()
+        if clicked == btn_cancel:
+            event.ignore()
+            return True
+        if clicked == btn_copy:
+            action = "copy"
+
+        existing_codes = set()
+        for i in range(intended_parent.childCount()):
+            child = intended_parent.child(i)
+            if child and child.data(0, TREE_ITEM_TYPE_ROLE) == TreeItemType.SONG.value:
+                code = self._get_song_code_for_item(child)
+                if code:
+                    existing_codes.add(code)
+
+        duplicates = [
+            self._get_song_code_for_item(item)
+            for item in ordered_items
+            if self._get_song_code_for_item(item) in existing_codes
+        ]
+        if duplicates:
+            msg = QMessageBox(self.tree)
+            msg.setIcon(QMessageBox.Warning)
+            msg.setWindowTitle(texts.SONGS_DUPLICATE_TITLE)
+            msg.setText(texts.SONGS_DUPLICATE_TEXT.format(
+                duplicates=len(duplicates),
+                total=len(ordered_items),
+            ))
+            btn_add_all = msg.addButton(texts.SONGS_DUPLICATE_ADD_ALL, QMessageBox.AcceptRole)
+            btn_add_unique = msg.addButton(texts.SONGS_DUPLICATE_ADD_UNIQUE, QMessageBox.ActionRole)
+            btn_add_none = msg.addButton(texts.SONGS_DUPLICATE_ADD_NONE, QMessageBox.RejectRole)
+            msg.setDefaultButton(btn_add_unique)
+            msg.exec()
+            clicked = msg.clickedButton()
+            if clicked == btn_add_none:
+                event.ignore()
+                return True
+            if clicked == btn_add_unique:
+                ordered_items = [
+                    item for item in ordered_items
+                    if self._get_song_code_for_item(item) not in existing_codes
+                ]
+                if not ordered_items:
+                    event.ignore()
+                    return True
+
+        pos = self._get_event_pos(event)
+        target = self.tree.itemAt(pos)
+        indicator = self.tree.dropIndicatorPosition()
+        insert_index = -1
+        if indicator in (QAbstractItemView.AboveItem, QAbstractItemView.BelowItem) and target:
+            if self._get_item_type(target) == TreeItemType.SONG.value and target.parent() == intended_parent:
+                base_index = intended_parent.indexOfChild(target)
+                insert_index = base_index + (1 if indicator == QAbstractItemView.BelowItem else 0)
+
+        offset = 0
+        if action == "move":
+            for item in ordered_items:
+                if source_parent:
+                    source_parent.takeChild(source_parent.indexOfChild(item))
+                if insert_index != -1:
+                    intended_parent.insertChild(insert_index + offset, item)
+                    offset += 1
+                else:
+                    intended_parent.addChild(item)
+        else:
+            for item in ordered_items:
+                new_item = self._clone_song_item(item)
+                if insert_index != -1:
+                    intended_parent.insertChild(insert_index + offset, new_item)
+                    offset += 1
+                else:
+                    intended_parent.addChild(new_item)
+
+        event.setDropAction(Qt.CopyAction if action == "copy" else Qt.MoveAction)
+        event.accept()
+        self._rebuild_playlist_songs(intended_parent)
+        if action == "move":
+            self._rebuild_playlist_songs(source_parent)
         return True
 
     def _schedule_rebuild_for_internal_drop(self, event):

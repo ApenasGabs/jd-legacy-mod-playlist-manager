@@ -265,6 +265,9 @@ ORDER_SELECT_PLAYLISTS_ONLY = "Please select only playlist items to order."
 ORDER_PLAYLIST_PROMPT = "How would you like to order the songs in this playlist?"
 ORDER_PLAYLIST_BY_TITLE = "Order by song name"
 ORDER_PLAYLIST_BY_ARTIST = "Order by artist"
+ORDER_PLAYLIST_DIRECTION_LABEL = "Sort direction:"
+ORDER_PLAYLIST_ASCENDING = "Ascending"
+ORDER_PLAYLIST_DESCENDING = "Descending"
 ORDER_PLAYLIST_ERROR = "Error ordering playlist: {error}"
 
 FATAL_ERROR_TEXT = "An unexpected error occurred:\n{error}"
@@ -302,6 +305,14 @@ SONGS_DUPLICATE_TEXT = (
 SONGS_DUPLICATE_ADD_ALL = "Add all (allow duplicates)"
 SONGS_DUPLICATE_ADD_NONE = "Add none"
 SONGS_DUPLICATE_ADD_UNIQUE = "Add only new songs"
+
+SONGS_MOVE_COPY_TITLE = "Move or Copy Songs"
+SONGS_MOVE_COPY_TEXT = (
+    "You are moving {count} song(s) to another playlist.\n\n"
+    "What do you want to do?"
+)
+SONGS_MOVE_COPY_MOVE = "Move songs"
+SONGS_MOVE_COPY_COPY = "Copy songs"
 
 SONG_NOT_FOUND_TITLE = "Song not found in the Manager's songs database"
 SONG_NOT_FOUND_ACTION = "Search similar song"
