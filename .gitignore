@@ -7,7 +7,7 @@
 .venv/
 venv/
 ENV/
-
+app
 # Logs
 **/logs/
 **/*.log

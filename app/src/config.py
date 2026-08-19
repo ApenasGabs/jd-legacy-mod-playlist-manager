@@ -5,11 +5,19 @@ from pathlib import Path
 
 APP_NAME = "JDLEGACY_PLAYLIST_MANAGER"
 IS_FROZEN = getattr(sys, "frozen", False)
+IS_APPIMAGE = "APPIMAGE" in os.environ
 
 if IS_FROZEN:
     PROJECT_ROOT = Path(sys.executable).parent
 else:
     PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# When running inside an AppImage, writable data must go to user's home
+# because the AppImage filesystem is read-only (squashfs).
+if IS_APPIMAGE:
+    _WRITABLE_ROOT = Path.home() / ".local" / "share" / "JD2022LMPlaylistManager"
+else:
+    _WRITABLE_ROOT = None
 
 # Resource directories (bundled with the app)
 RESOURCES_DIR = PROJECT_ROOT / "resources"
@@ -17,6 +25,8 @@ GUI_DIR = RESOURCES_DIR / "gui"
 ASSETS_DIR = RESOURCES_DIR / "assets"
 
 def _get_portable_runtime_root():
+    if IS_APPIMAGE:
+        return _WRITABLE_ROOT / "runtime"
     if IS_FROZEN:
         return Path(sys.executable).resolve().parent / "runtime"
     return PROJECT_ROOT / "runtime"
@@ -24,6 +34,8 @@ def _get_portable_runtime_root():
 USER_DATA_DIR = _get_portable_runtime_root()
 
 def _get_output_root():
+    if IS_APPIMAGE:
+        return _WRITABLE_ROOT
     if IS_FROZEN:
         return Path(sys.executable).resolve().parent
     return PROJECT_ROOT
@@ -67,6 +79,14 @@ def setup_directories(dirs=ALL_DIRS):
     """Creates folders if they don't exist."""
     for folder in dirs:
         folder.mkdir(parents=True, exist_ok=True)
+
+    # On first AppImage run, copy bundled songs.json to writable location
+    if IS_APPIMAGE:
+        import shutil
+        bundled_songs = PROJECT_ROOT / "runtime" / "songs.json"
+        target_songs = USER_DATA_DIR / "songs.json"
+        if bundled_songs.exists() and not target_songs.exists():
+            shutil.copy2(bundled_songs, target_songs)
 
 # Input
 INPUT_MOD_ROOT_DIR = None # Will be defined via GUI
