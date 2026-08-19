@@ -7,8 +7,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,156 +25,52 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r app/requirements.txt
-          pip install pyside6 zstandard cx_Freeze
+          pip install pyside6 zstandard
+
 
       - name: Build and Prepare Release Files
         shell: pwsh
         run: |
           cd app
+          # Build with cx_Freeze
           python setup.py build
+          # Create main release folder
           $releaseDir = "JD2022LMPlaylistManager"
           mkdir $releaseDir
+          # Copy all built files and folders to the release folder
           cp -r build_output/* $releaseDir/
+          # Ensure runtime/songs.json exists in the correct place (redundant, but safe)
           cp runtime/songs.json $releaseDir/runtime/
+          # Zip the entire folder (structure: JD2022LMPlaylistManager/ with all files inside)
           Compress-Archive -Path $releaseDir -DestinationPath ../JD2022LMPlaylistManager.zip
 
       - name: Generate SHA-256 Hash
         shell: pwsh
         run: |
           $hash = (Get-FileHash ./JD2022LMPlaylistManager.zip -Algorithm SHA256).Hash
-          echo "$hash" > ./windows-hash.txt
-
-      - name: Upload Windows Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-build
-          path: |
-            JD2022LMPlaylistManager.zip
-            windows-hash.txt
-
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install -r app/requirements.txt
-          pip install pyside6 zstandard cx_Freeze
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-
-      - name: Build and Prepare AppImage
-        run: |
-          cd app
-          # Convert icon
-          magick resources/gui/icon.ico resources/gui/icon.png
-          
-          # Build with cx_Freeze
-          python setup.py build
-          
-          # Prepare AppDir
-          mkdir -p AppDir/usr/bin
-          cp -r build_output/* AppDir/usr/bin/
-          mkdir -p AppDir/usr/bin/runtime
-          cp runtime/songs.json AppDir/usr/bin/runtime/
-          
-          # Create .desktop file
-          cat <<EOF > AppDir/JD2022LMPlaylistManager.desktop
-          [Desktop Entry]
-          Name=JD2022LMPlaylistManager
-          Exec=JD2022LMPlaylistManager
-          Icon=icon
-          Type=Application
-          Categories=Utility;
-          EOF
-          
-          # Copy icon and set up AppRun
-          cp resources/gui/icon.png AppDir/icon.png
-          ln -s usr/bin/JD2022LMPlaylistManager AppDir/AppRun
-          
-          # Download appimagetool
-          wget -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
-          chmod +x appimagetool
-          
-          # Build AppImage
-          ARCH=x86_64 ./appimagetool AppDir ../JD2022LMPlaylistManager-x86_64.AppImage
-
-      - name: Generate SHA-256 Hash
-        run: |
-          hash=$(sha256sum JD2022LMPlaylistManager-x86_64.AppImage | awk '{ print $1 }')
-          echo "$hash" > ./linux-hash.txt
-
-      - name: Upload Linux Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-build
-          path: |
-            JD2022LMPlaylistManager-x86_64.AppImage
-            linux-hash.txt
-
-  release:
-    needs: [build-windows, build-linux]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
-    steps:
-      - name: Download Windows Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-build
-
-      - name: Download Linux Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-build
-
-      - name: Read Hashes
-        id: hashes
-        run: |
-          win_hash=$(cat windows-hash.txt)
-          lin_hash=$(cat linux-hash.txt)
-          echo "WIN_HASH=$win_hash" >> $GITHUB_ENV
-          echo "LIN_HASH=$lin_hash" >> $GITHUB_ENV
+          echo "ZIP_HASH=$hash" >> $env:GITHUB_ENV
+          echo "SHA-256: $hash"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            JD2022LMPlaylistManager.zip
-            JD2022LMPlaylistManager-x86_64.AppImage
+          files: JD2022LMPlaylistManager.zip
           name: Release ${{ github.ref_name }}
           body: |
             ## Distribution Details
             
             This release contains the standalone version of the JD2022LMPlaylistManager.
             
-            ### Windows Installation
+            ### Installation
             1. Download and extract the `JD2022LMPlaylistManager.zip` file.
             2. Run the `JD2022LMPlaylistManager.exe` file.
             
-            ### Linux Installation
-            1. Download the `JD2022LMPlaylistManager-x86_64.AppImage` file.
-            2. Make it executable: `chmod +x JD2022LMPlaylistManager-x86_64.AppImage`
-            3. Run it: `./JD2022LMPlaylistManager-x86_64.AppImage`
-            
             ### Security Verification
+            **SHA-256 Hash:** `${{ env.ZIP_HASH }}`
             
-            **Windows SHA-256 Hash:** `${{ env.WIN_HASH }}`
             To verify the file integrity via PowerShell:
             `Get-FileHash ./JD2022LMPlaylistManager.zip -Algorithm SHA256`
-            
-            **Linux SHA-256 Hash:** `${{ env.LIN_HASH }}`
-            To verify the file integrity via terminal:
-            `sha256sum ./JD2022LMPlaylistManager-x86_64.AppImage`
           draft: false
           prerelease: false
         env:
