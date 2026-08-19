@@ -72,7 +72,7 @@ jobs:
         run: |
           cd app
           # Convert icon
-          magick resources/gui/icon.ico resources/gui/icon.png
+          convert resources/gui/icon.ico resources/gui/icon.png
           
           # Build with cx_Freeze
           python setup.py build
