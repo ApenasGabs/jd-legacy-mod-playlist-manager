@@ -1,4 +1,5 @@
 
+import sys
 from cx_Freeze import setup, Executable
 
 # Dependencies are automatically detected, but some modules need manual inclusion
@@ -16,15 +17,17 @@ build_exe_options = {
     "excludes": [
         "tkinter", "unittest", "email", "html", "http", "xml", "pydoc_data", "test", "distutils", "setuptools"
     ],
-    "include_msvcr": True,
     "bin_path_includes": [],
     "build_exe": "build_output",
     "zip_include_packages": [],
     "zip_exclude_packages": ["*"],
 }
 
+if sys.platform == "win32":
+    build_exe_options["include_msvcr"] = True
 
-base = "Win32GUI"
+base = "Win32GUI" if sys.platform == "win32" else None
+target_name = "JD2022LMPlaylistManager.exe" if sys.platform == "win32" else "JD2022LMPlaylistManager"
 
 setup(
     name="JD2022LMPlaylistManager",
@@ -35,7 +38,7 @@ setup(
         Executable(
             "main.py",
             base=base,
-            target_name="JD2022LMPlaylistManager.exe",
+            target_name=target_name,
             icon="resources/gui/icon.ico"
         )
     ],
