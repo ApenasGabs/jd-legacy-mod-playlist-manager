@@ -111,7 +111,7 @@ jobs:
           chmod +x appimagetool
           
           # Build AppImage
-          ARCH=x86_64 ./appimagetool AppDir ../JD2022LMPlaylistManager-x86_64.AppImage
+          ARCH=x86_64 ./appimagetool --appimage-extract-and-run AppDir ../JD2022LMPlaylistManager-x86_64.AppImage
 
       - name: Generate SHA-256 Hash
         run: |
